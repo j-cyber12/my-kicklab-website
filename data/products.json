@@ -1,0 +1,44 @@
+[
+  {
+    "id": "air-velocity",
+    "name": "Air Velocity",
+    "price": 129.99,
+    "description": "Lightweight runner with breathable mesh and responsive foam for all‑day comfort.",
+    "thumbnail": "/images/air-velocity-1.svg",
+    "images": [
+      "/images/air-velocity-1.svg",
+      "/images/air-velocity-2.svg",
+      "/images/air-velocity-3.svg"
+    ],
+    "videoUrl": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    "sizes": ["7", "8", "9", "10", "11"]
+  },
+  {
+    "id": "street-pulse",
+    "name": "Street Pulse",
+    "price": 149.0,
+    "description": "Sleek lifestyle sneaker with premium knit upper and cushioned midsole.",
+    "thumbnail": "/images/street-pulse-1.svg",
+    "images": [
+      "/images/street-pulse-1.svg",
+      "/images/street-pulse-2.svg",
+      "/images/street-pulse-3.svg"
+    ],
+    "videoUrl": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    "sizes": ["6", "7", "8", "9", "10"]
+  },
+  {
+    "id": "trail-guardian",
+    "name": "Trail Guardian",
+    "price": 169.5,
+    "description": "Rugged outdoor shoe with grippy outsole and waterproof liner.",
+    "thumbnail": "/images/trail-guardian-1.svg",
+    "images": [
+      "/images/trail-guardian-1.svg",
+      "/images/trail-guardian-2.svg",
+      "/images/trail-guardian-3.svg"
+    ],
+    "videoUrl": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    "sizes": ["8", "9", "10", "11", "12"]
+  }
+]

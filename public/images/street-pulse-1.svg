@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <linearGradient id="h1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fb7185"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="#0b0b0c"/>
+  <rect x="40" y="40" width="720" height="720" rx="40" fill="url(#h1)" opacity="0.15"/>
+  <g transform="translate(80,220)">
+    <path d="M50 260c48-32 106-53 172-58 60-4 114 5 168 17 28 7 55 13 80 17 15 2 29-7 35-20l13-30c5-11 1-24-10-31-30-19-71-37-120-51-63-18-123-23-179-17-37 4-69 14-96 27-16 8-29 19-38 30-7 9-9 21-7 31l8 34c3 12-3 24-13 29l-27 14c-11 6-14 22-6 31 20 21 54 26 94 17z" fill="url(#h1)"/>
+    <circle cx="120" cy="310" r="18" fill="#fff"/>
+    <circle cx="230" cy="310" r="18" fill="#fff"/>
+  </g>
+  <text x="60" y="100" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="48" fill="#fff">Street Pulse</text>
+</svg>

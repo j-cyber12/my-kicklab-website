@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <linearGradient id="t2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="#0b0b0c"/>
+  <rect x="60" y="60" width="680" height="680" rx="36" fill="url(#t2)" opacity="0.18"/>
+  <g transform="translate(90,240)">
+    <path d="M40 240c48-30 104-50 170-56 60-5 115 2 171 14 31 7 60 13 86 16 14 2 27-6 31-18l10-26c4-10 0-21-10-27-28-18-66-35-110-47-59-16-114-21-166-15-34 4-64 12-88 25-15 8-27 18-35 27-6 9-8 20-6 30l8 31c3 11-2 21-11 26l-25 13c-10 6-13 20-6 28 19 19 51 24 93 17z" fill="url(#t2)"/>
+  </g>
+  <text x="60" y="100" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="48" fill="#fff">Trail Guardian</text>
+</svg>
