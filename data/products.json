@@ -11,12 +11,18 @@
       "/images/air-velocity-3.svg"
     ],
     "videoUrl": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    "sizes": ["7", "8", "9", "10", "11"]
+    "sizes": [
+      "7",
+      "8",
+      "9",
+      "10",
+      "11"
+    ]
   },
   {
     "id": "street-pulse",
     "name": "Street Pulse",
-    "price": 149.0,
+    "price": 149,
     "description": "Sleek lifestyle sneaker with premium knit upper and cushioned midsole.",
     "thumbnail": "/images/street-pulse-1.svg",
     "images": [
@@ -25,7 +31,13 @@
       "/images/street-pulse-3.svg"
     ],
     "videoUrl": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    "sizes": ["6", "7", "8", "9", "10"]
+    "sizes": [
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ]
   },
   {
     "id": "trail-guardian",
@@ -39,6 +51,12 @@
       "/images/trail-guardian-3.svg"
     ],
     "videoUrl": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    "sizes": ["8", "9", "10", "11", "12"]
+    "sizes": [
+      "8",
+      "9",
+      "10",
+      "11",
+      "12"
+    ]
   }
 ]

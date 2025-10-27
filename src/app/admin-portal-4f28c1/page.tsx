@@ -97,6 +97,13 @@ export default function AdminPage() {
       const matchesCategory = !filterCategory || p.category === filterCategory;
       return matchesQuery && matchesGender && matchesCategory;
     });
+    // Remove duplicates by stable key (product id) to avoid duplicate cards
+    const seen = new Set<string>();
+    list = list.filter((p) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
     list = list.sort((a, b) => {
       if (sort === 'name-asc') return a.name.localeCompare(b.name);
       if (sort === 'price-asc') return a.price - b.price;

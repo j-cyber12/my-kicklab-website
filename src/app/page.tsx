@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import fs from 'node:fs';
 import { readProducts, type Product } from '@/lib/products';
 
 export const runtime = 'nodejs';
@@ -13,38 +12,33 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
   const products: Product[] = await readProducts();
   const filtered = products.filter((p) => (!gender || p.gender === gender) && (!category || p.category === category));
   const featured = filtered.slice(0, 5);
-  const logoCandidates = [
-    'public/images/kicklab-logo.svg',
-    'public/images/kicklab-logo.webp',
-    'public/images/kicklab-logo.png',
-    'public/kicklab-logo.svg',
-    'public/kicklab-logo.png',
-  ];
-  const found = logoCandidates.find((p) => fs.existsSync(p));
-  const logoSrc = found ? found.replace(/^public/, '') : '/logo.svg';
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Mobile-first hero */}
+      {/* Hero banner */}
       <section className="px-4 pb-4" style={{ paddingTop: 'max(env(safe-area-inset-top), 1rem)' }}>
-        <div className="rounded-2xl overflow-hidden relative text-white p-5 accent-gradient">
-          <div className="absolute inset-0 pointer-events-none opacity-40 shimmer" style={{backgroundImage:'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.18) 50%, rgba(255,255,255,0) 100%)'}} />
-          {/* Merged header + banner (mobile) */}
-          <div className="relative flex items-center justify-between sm:hidden">
-            <div className="flex items-center gap-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={logoSrc} alt="KickLab logo" className="w-7 h-7 rounded" />
-              <span className="text-base font-semibold tracking-tight">KickLab</span>
+        <div
+          className="rounded-2xl overflow-hidden relative text-white p-8 sm:p-12 md:p-16"
+          style={{
+            background:
+              'radial-gradient(80% 60% at 70% 10%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%), linear-gradient(180deg, #2a174b 0%, #1b1033 100%)',
+          }}
+        >
+          <div className="absolute inset-0 pointer-events-none opacity-20" style={{backgroundImage:'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.15) 50%, rgba(255,255,255,0) 100%)'}} />
+          <div className="relative min-h-[46vh] md:min-h-[60vh] grid place-items-center text-center">
+            <div>
+              {/* Wordmark and slogan only */}
+              <div style={{ fontFamily: 'var(--font-playfair)' }} className="font-black tracking-wide">
+                <h1 className="text-4xl sm:text-5xl md:text-7xl leading-none">LUVRÉ</h1>
+              </div>
+              <p className="mt-4 text-xs sm:text-sm tracking-[0.35em] uppercase opacity-90">Walk With Elegance</p>
+              <div className="mt-6">
+                <Link href="#all" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-zinc-900 font-medium shadow-sm hover:shadow transition">
+                  Shop Now
+                </Link>
+              </div>
             </div>
-            <span className="text-[11px] bg-white/10 px-3 py-1 rounded-full backdrop-blur border border-white/20 animate-fade-up animate-delay-2">New Season</span>
           </div>
-          <h1 className="relative text-3xl font-black leading-tight mt-3 animate-fade-up animate-delay-1">Monochrome. Modern. Minimal.</h1>
-          <p className="relative text-sm/relaxed opacity-90 mt-3 max-w-md animate-fade-up animate-delay-2">
-            Curated sneakers for everyday comfort and statement style.
-          </p>
-          <div className="relative mt-4 flex gap-2 animate-fade-up animate-delay-3">
-            <Link href="#all" className="px-4 py-2 rounded-full bg-white text-zinc-900 font-medium shadow-sm">Shop Now</Link>
-          </div>
-          <div className="absolute -bottom-10 -right-10 w-44 h-44 bg-white/10 rounded-full blur-2xl" />
+          <div className="absolute -bottom-12 -right-12 w-56 h-56 bg-white/10 rounded-full blur-2xl" />
         </div>
       </section>
 
@@ -170,3 +164,4 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
     </div>
   );
 }
+
