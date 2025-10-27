@@ -3,8 +3,8 @@
   "functions": {
     "/api/admin/login": {},
     "/api/health": {},
-    "/api/products": {},
     "/api/products/[id]": {},
+    "/api/products": {},
     "/api/upload": {},
     "/": {},
     "/product/[id]": {}

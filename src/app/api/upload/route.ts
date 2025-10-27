@@ -23,7 +23,27 @@ export async function POST(req: Request) {
       if (!(f instanceof File)) continue;
       const ab = await f.arrayBuffer();
       const buf = Buffer.from(ab);
-      const ext = path.extname(f.name) || (f.type.includes('video') ? '.mp4' : '.bin');
+      // Derive a safe extension. Prefer original extension; otherwise use MIME type.
+      let ext = path.extname(f.name).toLowerCase();
+      if (!ext) {
+        if (f.type.startsWith('image/')) {
+          const map: Record<string, string> = {
+            'image/png': '.png',
+            'image/jpeg': '.jpg',
+            'image/jpg': '.jpg',
+            'image/webp': '.webp',
+            'image/gif': '.gif',
+            'image/svg+xml': '.svg',
+            'image/avif': '.avif',
+            'image/heic': '.heic',
+          };
+          ext = map[f.type] || '.png';
+        } else if (f.type.includes('video')) {
+          ext = '.mp4';
+        } else {
+          ext = '.bin';
+        }
+      }
       const base = path.basename(f.name, path.extname(f.name));
       const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName(base)}${ext}`;
       const dest = path.join(UPLOAD_DIR, filename);

@@ -4,11 +4,11 @@
   "/api/health/route": "/api/health",
   "/api/admin/login/route": "/api/admin/login",
   "/api/products/[id]/route": "/api/products/[id]",
-  "/api/products/route": "/api/products",
   "/api/upload/route": "/api/upload",
+  "/api/products/route": "/api/products",
   "/admin/page": "/admin",
-  "/page": "/",
   "/product/[id]/page": "/product/[id]",
-  "/admin-portal-4f28c1/login/page": "/admin-portal-4f28c1/login",
-  "/admin-portal-4f28c1/page": "/admin-portal-4f28c1"
+  "/page": "/",
+  "/admin-portal-4f28c1/page": "/admin-portal-4f28c1",
+  "/admin-portal-4f28c1/login/page": "/admin-portal-4f28c1/login"
 }
