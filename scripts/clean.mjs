@@ -1,12 +1,15 @@
 import { rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-const dir = resolve(process.cwd(), '.next');
-try {
-  await rm(dir, { recursive: true, force: true });
-  console.log('Removed .next');
-} catch (e) {
-  console.error('Failed to remove .next', e);
-  process.exitCode = 1;
-}
+const rmSafe = async (p) => {
+  try {
+    await rm(p, { recursive: true, force: true });
+    console.log('Removed', p);
+  } catch (e) {
+    console.error('Failed to remove', p, e?.message || e);
+    process.exitCode = 1;
+  }
+};
 
+await rmSafe(resolve(process.cwd(), '.next'));
+await rmSafe(resolve(process.cwd(), '.next-kicklab'));

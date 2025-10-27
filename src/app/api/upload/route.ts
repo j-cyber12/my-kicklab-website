@@ -4,7 +4,12 @@ import path from 'path';
 
 export const runtime = 'nodejs';
 
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
+const PROJECT_ROOT = process.cwd();
+const PUBLIC_DIR = path.join(PROJECT_ROOT, 'public');
+const CONFIG_UPLOAD_DIR = process.env.UPLOAD_DIR && process.env.UPLOAD_DIR.trim()
+  ? process.env.UPLOAD_DIR
+  : path.join(PUBLIC_DIR, 'uploads');
+const UPLOAD_DIR = CONFIG_UPLOAD_DIR;
 
 function safeName(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-');
@@ -48,7 +53,9 @@ export async function POST(req: Request) {
       const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName(base)}${ext}`;
       const dest = path.join(UPLOAD_DIR, filename);
       await fs.writeFile(dest, buf);
-      saved.push(`/uploads/${filename}`);
+      // If we are saving under public/, serve directly; otherwise use API proxy
+      const isUnderPublic = path.resolve(dest).startsWith(path.resolve(PUBLIC_DIR + path.sep));
+      saved.push(isUnderPublic ? `/uploads/${filename}` : `/api/uploads/${filename}`);
     }
     return NextResponse.json({ files: saved });
   } catch {
