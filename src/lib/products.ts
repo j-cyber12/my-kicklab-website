@@ -14,7 +14,9 @@ export type Product = {
   category?: 'shoes' | 'bags';
 };
 
-const DATA_PATH = path.join(process.cwd(), 'data', 'products.json');
+const DATA_PATH = process.env.PRODUCTS_PATH && process.env.PRODUCTS_PATH.trim()
+  ? process.env.PRODUCTS_PATH
+  : path.join(process.cwd(), 'data', 'products.json');
 
 async function ensureDataFile() {
   try {

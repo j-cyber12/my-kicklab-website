@@ -6,7 +6,7 @@
     "dev": "npm run clean && next dev",
     "dev:turbo": "npm run clean && next dev --turbo",
     "build": "next build",
-    "start": "npm run clean && next start",
+    "start": "npm run clean && next start -p $PORT",
     "lint": "eslint",
     "clean": "node scripts/clean.mjs",
     "rebuild": "npm run clean && npm run build"
