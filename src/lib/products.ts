@@ -34,9 +34,9 @@ export async function readProducts(): Promise<Product[]> {
   const col = db.collection<WithId<Product>>(COLLECTION);
   const docs = await col.find({}).sort({ name: 1 }).toArray();
   return docs.map((d) => {
-    const c = { ...(d as any) };
-    delete (c as any)._id;
-    return c as Product;
+    const { _id: _mongoId, ...rest } = d;
+    void _mongoId; // mark used to satisfy lint rules
+    return rest as Product;
   });
 }
 
