@@ -60,7 +60,14 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           )}
           <div className="mt-6 flex items-center gap-4">
             <span className="text-2xl font-bold">{'$'}{product.price.toFixed(2)}</span>
-            <button className="px-5 py-2 rounded-full accent-gradient text-white font-medium shadow hover:opacity-90 transition-opacity">Add to cart</button>
+            <a
+              href="https://wa.me/message/ZC23PRNRWILSN1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-5 py-2 rounded-full accent-gradient text-white font-medium shadow hover:opacity-90 transition-opacity"
+            >
+              Buy
+            </a>
           </div>
         </div>
       </div>

@@ -1,64 +1,61 @@
 import { NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { v2 as cloudinary } from 'cloudinary';
 
 export const runtime = 'nodejs';
 
-const PROJECT_ROOT = process.cwd();
-const PUBLIC_DIR = path.join(PROJECT_ROOT, 'public');
-const CONFIG_UPLOAD_DIR = process.env.UPLOAD_DIR && process.env.UPLOAD_DIR.trim()
-  ? process.env.UPLOAD_DIR
-  : path.join(PUBLIC_DIR, 'uploads');
-const UPLOAD_DIR = CONFIG_UPLOAD_DIR;
+// Configure Cloudinary from env
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+});
 
-function safeName(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-');
+function ensureConfigured() {
+  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    throw new Error('Cloudinary is not configured');
+  }
+}
+
+function uploadBuffer(buffer: Buffer, opts: { public_id?: string; folder?: string; resource_type: 'image' | 'video' | 'auto'; }) {
+  return new Promise<{ secure_url: string }>((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream({
+      resource_type: opts.resource_type,
+      folder: opts.folder,
+      public_id: opts.public_id,
+      use_filename: !opts.public_id,
+      unique_filename: true,
+      overwrite: false,
+    }, (err, result) => {
+      if (err || !result) return reject(err || new Error('No result'));
+      resolve({ secure_url: result.secure_url! });
+    });
+    stream.end(buffer);
+  });
 }
 
 export async function POST(req: Request) {
   try {
+    ensureConfigured();
     const form = await req.formData();
     const files = form.getAll('files');
-    if (!files.length) {
-      return NextResponse.json({ error: 'No files' }, { status: 400 });
-    }
-    await fs.mkdir(UPLOAD_DIR, { recursive: true });
-    const saved: string[] = [];
+    if (!files.length) return NextResponse.json({ error: 'No files' }, { status: 400 });
+
+    const out: string[] = [];
     for (const f of files) {
       if (!(f instanceof File)) continue;
       const ab = await f.arrayBuffer();
       const buf = Buffer.from(ab);
-      // Derive a safe extension. Prefer original extension; otherwise use MIME type.
-      let ext = path.extname(f.name).toLowerCase();
-      if (!ext) {
-        if (f.type.startsWith('image/')) {
-          const map: Record<string, string> = {
-            'image/png': '.png',
-            'image/jpeg': '.jpg',
-            'image/jpg': '.jpg',
-            'image/webp': '.webp',
-            'image/gif': '.gif',
-            'image/svg+xml': '.svg',
-            'image/avif': '.avif',
-            'image/heic': '.heic',
-          };
-          ext = map[f.type] || '.png';
-        } else if (f.type.includes('video')) {
-          ext = '.mp4';
-        } else {
-          ext = '.bin';
-        }
-      }
-      const base = path.basename(f.name, path.extname(f.name));
-      const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName(base)}${ext}`;
-      const dest = path.join(UPLOAD_DIR, filename);
-      await fs.writeFile(dest, buf);
-      // If we are saving under public/, serve directly; otherwise use API proxy
-      const isUnderPublic = path.resolve(dest).startsWith(path.resolve(PUBLIC_DIR + path.sep));
-      saved.push(isUnderPublic ? `/uploads/${filename}` : `/api/uploads/${filename}`);
+      const isVideo = (f.type && f.type.startsWith('video/')) || /\.(mp4|mov|webm|m4v)$/i.test(f.name);
+      const resource_type = isVideo ? 'video' : 'image';
+      const folder = isVideo
+        ? (process.env.CLOUDINARY_VIDEO_FOLDER || process.env.CLOUDINARY_FOLDER || 'kicklab')
+        : (process.env.CLOUDINARY_FOLDER || 'kicklab');
+      const res = await uploadBuffer(buf, { resource_type, folder });
+      out.push(res.secure_url);
     }
-    return NextResponse.json({ files: saved });
-  } catch {
+    return NextResponse.json({ files: out });
+  } catch (err) {
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 }
