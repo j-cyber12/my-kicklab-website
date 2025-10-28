@@ -17,10 +17,11 @@ function ensureConfigured() {
   }
 }
 
-function uploadBuffer(buffer: Buffer, opts: { public_id?: string; folder?: string; resource_type: 'image' | 'video' | 'auto'; }) {
+function uploadBuffer(buffer: Buffer, opts: { public_id?: string; folder?: string; resource_type?: 'image' | 'video' | 'auto'; }) {
   return new Promise<{ secure_url: string }>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream({
-      resource_type: opts.resource_type,
+      // Use auto to let Cloudinary infer image/video when uncertain
+      resource_type: opts.resource_type || 'auto',
       folder: opts.folder,
       public_id: opts.public_id,
       use_filename: !opts.public_id,
@@ -47,15 +48,16 @@ export async function POST(req: Request) {
       const ab = await f.arrayBuffer();
       const buf = Buffer.from(ab);
       const isVideo = (f.type && f.type.startsWith('video/')) || /\.(mp4|mov|webm|m4v)$/i.test(f.name);
-      const resource_type = isVideo ? 'video' : 'image';
       const folder = isVideo
         ? (process.env.CLOUDINARY_VIDEO_FOLDER || process.env.CLOUDINARY_FOLDER || 'kicklab')
         : (process.env.CLOUDINARY_FOLDER || 'kicklab');
-      const res = await uploadBuffer(buf, { resource_type, folder });
+      const res = await uploadBuffer(buf, { resource_type: 'auto', folder });
       out.push(res.secure_url);
     }
     return NextResponse.json({ files: out });
-  } catch (err) {
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+  } catch (err: any) {
+    // Log server-side for debugging on the host
+    console.error('Cloudinary upload failed:', err?.message || err);
+    return NextResponse.json({ error: 'Upload failed', detail: String(err?.message || err) }, { status: 500 });
   }
 }
