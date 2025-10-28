@@ -16,14 +16,14 @@ export async function GET() {
       return NextResponse.json({ ok: false, error: 'Missing Cloudinary env vars' }, { status: 500 });
     }
     // Ping Cloudinary admin API to verify credentials
-    const res = await new Promise((resolve, reject) => {
-      // @ts-ignore cloudinary types may not include ping
-      cloudinary.api.ping((err: any, result: any) => (err ? reject(err) : resolve(result)));
+    const res = await new Promise<unknown>((resolve, reject) => {
+      // @ts-expect-error cloudinary types may not include api.ping in the SDK typings
+      cloudinary.api.ping((err: unknown, result: unknown) => (err ? reject(err) : resolve(result)));
     });
     return NextResponse.json({ ok: true, result: res });
-  } catch (err: any) {
-    console.error('Cloudinary health check failed:', err?.message || err);
-    return NextResponse.json({ ok: false, error: String(err?.message || err) }, { status: 500 });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('Cloudinary health check failed:', msg);
+    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
   }
 }
-

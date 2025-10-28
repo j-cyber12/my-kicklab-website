@@ -27,9 +27,11 @@ function uploadBuffer(buffer: Buffer, opts: { public_id?: string; folder?: strin
       use_filename: !opts.public_id,
       unique_filename: true,
       overwrite: false,
-    }, (err, result) => {
-      if (err || !result) return reject(err || new Error('No result'));
-      resolve({ secure_url: result.secure_url! });
+    }, (err: unknown, result: unknown) => {
+      if (err || !result || typeof result !== 'object' || result === null || !('secure_url' in result)) {
+        return reject(err || new Error('No result'));
+      }
+      resolve({ secure_url: (result as { secure_url?: string }).secure_url! });
     });
     stream.end(buffer);
   });
@@ -55,9 +57,10 @@ export async function POST(req: Request) {
       out.push(res.secure_url);
     }
     return NextResponse.json({ files: out });
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Log server-side for debugging on the host
-    console.error('Cloudinary upload failed:', err?.message || err);
-    return NextResponse.json({ error: 'Upload failed', detail: String(err?.message || err) }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('Cloudinary upload failed:', msg);
+    return NextResponse.json({ error: 'Upload failed', detail: msg }, { status: 500 });
   }
 }

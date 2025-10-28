@@ -33,7 +33,11 @@ export async function readProducts(): Promise<Product[]> {
   const db = await getDb();
   const col = db.collection<WithId<Product>>(COLLECTION);
   const docs = await col.find({}).sort({ name: 1 }).toArray();
-  return docs.map(({ _id, ...rest }) => rest as Product);
+  return docs.map((d) => {
+    const c = { ...(d as any) };
+    delete (c as any)._id;
+    return c as Product;
+  });
 }
 
 // For compatibility; iterates and upserts items by id
