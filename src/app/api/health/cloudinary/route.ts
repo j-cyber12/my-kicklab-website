@@ -15,10 +15,13 @@ export async function GET() {
     if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
       return NextResponse.json({ ok: false, error: 'Missing Cloudinary env vars' }, { status: 500 });
     }
-    // Ping Cloudinary admin API to verify credentials
+    // Ping Cloudinary admin API to verify credentials, without using ts-ignore/any
+    const api = (cloudinary as unknown as { api?: { ping?: (cb: (err: unknown, result: unknown) => void) => void } }).api;
+    if (!api?.ping) {
+      return NextResponse.json({ ok: false, error: 'Cloudinary admin API ping not available' }, { status: 500 });
+    }
     const res = await new Promise<unknown>((resolve, reject) => {
-      // @ts-expect-error cloudinary types may not include api.ping in the SDK typings
-      cloudinary.api.ping((err: unknown, result: unknown) => (err ? reject(err) : resolve(result)));
+      api.ping!((err: unknown, result: unknown) => (err ? reject(err) : resolve(result)));
     });
     return NextResponse.json({ ok: true, result: res });
   } catch (err: unknown) {
