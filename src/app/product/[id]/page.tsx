@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getProduct } from '@/lib/products';
+import { cld } from '@/lib/images';
 
 export const runtime = 'nodejs';
 
@@ -14,19 +15,19 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         <div className="space-y-4 animate-fade-up">
           <div className="rounded-xl overflow-hidden border border-token bg-black">
             {product.videoUrl ? (
-              <video controls className="w-full h-auto" poster={product.images?.[0] || product.thumbnail}>
+              <video controls className="w-full h-auto" poster={cld(product.images?.[0] || product.thumbnail, 'detail')}>
                 <source src={product.videoUrl} type="video/mp4" />
               </video>
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={product.images?.[0] || product.thumbnail} alt={product.name} className="w-full h-auto" />
+              <img src={cld(product.images?.[0] || product.thumbnail, 'detail')} alt={product.name} className="w-full h-auto" />
             )}
           </div>
           {product.images?.length > 1 && (
             <div className="grid grid-cols-3 gap-3">
               {product.images.slice(1).map((img, i) => (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img key={i} src={img} alt={`${product.name} ${i + 2}`} className="rounded-lg border border-token" />
+                <img key={i} src={cld(img, 'gallery')} alt={`${product.name} ${i + 2}`} className="rounded-lg border border-token object-cover w-full h-full" />
               ))}
             </div>
           )}

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { readProducts, type Product } from '@/lib/products';
+import { cld } from '@/lib/images';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -88,9 +89,9 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
                 href={`/product/${p.id}`}
                 className="snap-start shrink-0 w-64 rounded-xl overflow-hidden border border-token surface hover-lift"
               >
-                <div className="aspect-[4/3] overflow-hidden">
+                <div className="aspect-[4/5] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.thumbnail} alt={p.name} className="w-full h-full object-cover" />
+                  <img src={cld(p.thumbnail, 'featured')} alt={p.name} className="w-full h-full object-cover" />
                 </div>
                 <div className="p-3">
                   <div className="flex items-center justify-between">
@@ -128,9 +129,13 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
               href={`/product/${p.id}`}
               className="group rounded-xl overflow-hidden border border-token surface hover-lift"
             >
-              <div className="aspect-square overflow-hidden">
+              <div className="aspect-[4/5] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.thumbnail} alt={p.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+                <img
+                  src={cld(p.thumbnail, 'grid')}
+                  alt={p.name}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                />
               </div>
               <div className="p-2">
                 <div className="text-[13px] font-medium truncate">{p.name || '(Untitled)'}</div>
@@ -164,4 +169,3 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
     </div>
   );
 }
-
