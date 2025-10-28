@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "functions": {
+    "/api/health/cloudinary": {},
+    "/api/admin/login": {},
+    "/api/health": {},
+    "/api/products/[id]": {},
+    "/api/products": {},
+    "/api/upload": {},
+    "/api/uploads/[...path]": {},
+    "/": {},
+    "/product/[id]": {}
+  }
+}

@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { readProducts, type Product } from '@/lib/products';
-import { cld } from '@/lib/images';
+// images helper not needed here; used in carousel component
+import ProductThumbCarousel from '@/components/ProductThumbCarousel';
+import Marquee from '@/components/Marquee';
+import BrandIcon, { type Brand } from '@/components/BrandIcon';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,7 +15,6 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
 
   const products: Product[] = await readProducts();
   const filtered = products.filter((p) => (!gender || p.gender === gender) && (!category || p.category === category));
-  const featured = filtered.slice(0, 5);
   return (
     <div className="max-w-6xl mx-auto">
       {/* Hero banner */}
@@ -43,78 +45,44 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
         </div>
       </section>
 
-      {/* Category chips (filterable) */}
-      <section className="px-4">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1">
+      {/* Brand icons & promo continuous marquee under banner */}
+      <section className="px-4 mt-2">
+        <div className="relative overflow-hidden -mx-1 px-1 py-1">
           {(() => {
-            const chips: { label: string; href: string; g?: 'men' | 'women'; c?: 'shoes' | 'bags' }[] = [
-              { label: 'All', href: '/' },
-              { label: "Men's Shoes", href: '/?gender=men&category=shoes', g: 'men', c: 'shoes' },
-              { label: "Women's Shoes", href: '/?gender=women&category=shoes', g: 'women', c: 'shoes' },
-              { label: "Men's Bags", href: '/?gender=men&category=bags', g: 'men', c: 'bags' },
-              { label: "Women's Bags", href: '/?gender=women&category=bags', g: 'women', c: 'bags' },
+            const items: { type: 'brand' | 'text'; label: string; key?: Brand }[] = [
+              { type: 'brand', label: 'Nike', key: 'nike' },
+              { type: 'text', label: 'New items each week' },
+              { type: 'brand', label: 'Adidas', key: 'adidas' },
+              { type: 'text', label: 'Best prices' },
+              { type: 'brand', label: 'Alexander McQueen', key: 'alexandermcqueen' },
+              { type: 'text', label: 'High quality' },
+              { type: 'brand', label: 'Vans', key: 'vans' },
+              { type: 'text', label: 'Fast shipping' },
             ];
-            return chips.map((item, i) => {
-              const active = item.g ? (item.g === gender && item.c === category) : !gender && !category;
-              return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-sm border hover-lift animate-fade-up ${
-                  active
-                    ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100'
-                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 border-zinc-200 dark:border-zinc-700'
-                }`}
-                style={{ animationDelay: `${80 * (i + 1)}ms` }}
-              >
-                {item.label}
-              </Link>
-              );
-            });
+            const nodes = items.map((item, i) =>
+              item.type === 'brand' ? (
+                <div key={`${item.type}-${item.label}-${i}`} className="flex items-center">
+                  {item.key ? (
+                    <BrandIcon name={item.key} className="h-6 sm:h-7 w-auto text-zinc-900 dark:text-zinc-100" />
+                  ) : (
+                    <span className="text-sm sm:text-base font-semibold whitespace-nowrap">{item.label}</span>
+                  )}
+                </div>
+              ) : (
+                <div
+                  key={`${item.type}-${item.label}-${i}`}
+                  className="px-3 py-1.5 rounded-full border border-token surface text-[10px] sm:text-xs text-muted whitespace-nowrap"
+                >
+                  {item.label}
+                </div>
+              )
+            );
+            return <Marquee items={nodes} speed={42} gapPx={12} />;
           })()}
         </div>
       </section>
 
-      {/* Featured carousel */}
-      {featured.length > 0 && (
-        <section className="px-4 mt-4">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-lg font-semibold">Featured</h2>
-            <Link href="#all" className="text-sm text-zinc-500">See all</Link>
-          </div>
-          <div className="mt-3 flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-2 -mx-1 px-1">
-            {featured.map((p) => (
-              <Link
-                key={p.id}
-                href={`/product/${p.id}`}
-                className="snap-start shrink-0 w-64 rounded-xl overflow-hidden border border-token surface hover-lift"
-              >
-                <div className="aspect-[4/5] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={cld(p.thumbnail, 'featured')} alt={p.name} className="w-full h-full object-cover" />
-                </div>
-                <div className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="font-medium truncate">{p.name || '(Untitled)'}</div>
-                    <div className="font-semibold">{'$'}{Number.isFinite(Number(p.price)) ? Number(p.price).toFixed(2) : '0.00'}</div>
-                  </div>
-                  {(p.gender || p.category) && (
-                    <div className="mt-1 flex gap-2 text-[11px]">
-                      {p.gender ? (
-                        <span className="px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 uppercase tracking-wide">{p.gender}</span>
-                      ) : null}
-                      {p.category ? (
-                        <span className="px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 uppercase tracking-wide">{p.category}</span>
-                      ) : null}
-                    </div>
-                  )}
-                  <p className="text-xs text-zinc-500 mt-1 line-clamp-2">{p.description}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Featured carousel removed per request */}
 
       {/* All products grid */}
       <section id="all" className="px-4 mt-6 pb-24">
@@ -130,16 +98,11 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
               className="group rounded-xl overflow-hidden border border-token surface hover-lift"
             >
               <div className="aspect-[4/5] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={cld(p.thumbnail, 'grid')}
-                  alt={p.name}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                />
+                <ProductThumbCarousel product={p} preset="grid" />
               </div>
               <div className="p-2">
                 <div className="text-[13px] font-medium truncate">{p.name || '(Untitled)'}</div>
-                <div className="text-[12px] text-muted truncate">{p.description}</div>
+                {/* description removed */}
                 {(p.gender || p.category) && (
                   <div className="mt-1 flex gap-2 text-[11px]">
                     {p.gender ? (

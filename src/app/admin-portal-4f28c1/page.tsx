@@ -13,7 +13,7 @@ type Product = {
   images: string[];
   videoUrl?: string;
   sizes?: string[];
-  gender?: 'men' | 'women';
+  gender?: 'men' | 'women' | 'unisex';
   category?: 'shoes' | 'bags';
 };
 
@@ -22,7 +22,7 @@ type Draft = {
   name: string;
   price: string;
   description: string;
-  gender: '' | 'men' | 'women';
+  gender: '' | 'men' | 'women' | 'unisex';
   category: '' | 'shoes' | 'bags';
 };
 
@@ -37,7 +37,7 @@ export default function AdminPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<'name-asc' | 'price-asc' | 'price-desc'>('name-asc');
-  const [filterGender, setFilterGender] = useState<'' | 'men' | 'women'>('');
+  const [filterGender, setFilterGender] = useState<'' | 'men' | 'women' | 'unisex'>('');
   const [filterCategory, setFilterCategory] = useState<'' | 'shoes' | 'bags'>('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -92,7 +92,7 @@ export default function AdminPage() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let list = products.filter((p) => {
-      const matchesQuery = !q || p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
+      const matchesQuery = !q || p.name.toLowerCase().includes(q);
       const matchesGender = !filterGender || p.gender === filterGender;
       const matchesCategory = !filterCategory || p.category === filterCategory;
       return matchesQuery && matchesGender && matchesCategory;
@@ -142,7 +142,6 @@ export default function AdminPage() {
     const body = {
       name: base,
       price: p.price,
-      description: p.description,
       thumbnail: p.thumbnail,
       images: p.images,
       videoUrl: p.videoUrl,
@@ -161,7 +160,7 @@ export default function AdminPage() {
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!draft.name || !draft.price || !draft.description) {
+    if (!draft.name || !draft.price) {
       showToast('Please fill required fields');
       return;
     }
@@ -174,8 +173,13 @@ export default function AdminPage() {
       for (const f of imageFiles) fd.append('files', f);
       const resUp = await fetch('/api/upload', { method: 'POST', body: fd });
       if (!resUp.ok) {
+        let detail = '';
+        try {
+          const j = await resUp.json();
+          detail = (j && (j.detail || j.error)) || '';
+        } catch {}
         setSaving(false);
-        showToast('Image upload failed');
+        showToast(detail ? `Image upload failed: ${detail}` : 'Image upload failed');
         return;
       }
       const { files } = await resUp.json();
@@ -188,8 +192,13 @@ export default function AdminPage() {
       fd.append('files', video);
       const resUpV = await fetch('/api/upload', { method: 'POST', body: fd });
       if (!resUpV.ok) {
+        let detail = '';
+        try {
+          const j = await resUpV.json();
+          detail = (j && (j.detail || j.error)) || '';
+        } catch {}
         setSaving(false);
-        showToast('Video upload failed');
+        showToast(detail ? `Video upload failed: ${detail}` : 'Video upload failed');
         return;
       }
       const { files } = await resUpV.json();
@@ -201,7 +210,6 @@ export default function AdminPage() {
       id: draft.id || undefined,
       name: draft.name.trim(),
       price: parseFloat(draft.price),
-      description: draft.description.trim(),
       thumbnail: finalImages[0] || '/placeholder.svg',
       images: finalImages,
       videoUrl,
@@ -315,12 +323,13 @@ export default function AdminPage() {
         </select>
         <select
           value={filterGender}
-          onChange={(e) => setFilterGender(e.target.value as '' | 'men' | 'women')}
+          onChange={(e) => setFilterGender(e.target.value as '' | 'men' | 'women' | 'unisex')}
           className="rounded-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1.5 text-sm"
         >
           <option value="">All Genders</option>
           <option value="men">Men</option>
           <option value="women">Women</option>
+          <option value="unisex">Unisex</option>
         </select>
         <select
           value={filterCategory}
@@ -351,7 +360,7 @@ export default function AdminPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="font-semibold">{p.name || '(Untitled)'}</div>
-                  <div className="text-xs text-zinc-500">{p.id}</div>
+                  {/* id hidden */}
                 </div>
                 <div className="font-semibold">{'$'}{Number.isFinite(Number(p.price)) ? Number(p.price).toFixed(2) : '0.00'}</div>
               </div>
@@ -365,7 +374,7 @@ export default function AdminPage() {
                   )}
                 </div>
               )}
-              <p className="text-sm text-zinc-500 mt-2 line-clamp-2">{p.description}</p>
+              {/* description hidden */}
               <div className="flex items-center gap-3 mt-4 text-sm">
                 <button onClick={() => openEdit(p)} className="px-3 py-1.5 rounded-full border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800">Edit</button>
                 <button onClick={() => duplicate(p)} className="px-3 py-1.5 rounded-full border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800">Duplicate</button>
@@ -401,13 +410,7 @@ export default function AdminPage() {
                     />
                     {nameError && <p id="name-error" className="mt-1 text-xs text-red-600">{nameError}</p>}
                   </div>
-                  <div>
-                    <label className="block text-sm mb-1">ID</label>
-                    <div className="flex gap-2">
-                      <input value={draft.id} onChange={(e) => setDraft({ ...draft, id: e.target.value })} placeholder="auto-from-name" className="w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-4 py-3 text-base" />
-                      <button type="button" onClick={() => setDraft({ ...draft, id: slugify(draft.name) })} className="px-4 rounded-md border border-zinc-300 dark:border-zinc-700">Slug</button>
-                    </div>
-                  </div>
+                  {/* ID field removed */}
                   <div>
                     <label className="block text-sm mb-1">Price <span className="text-red-500">*</span></label>
                     <input
@@ -437,6 +440,7 @@ export default function AdminPage() {
                       <option value="">— Select —</option>
                       <option value="men">Men</option>
                       <option value="women">Women</option>
+                      <option value="unisex">Unisex</option>
                     </select>
                   </div>
                   <div>
@@ -452,10 +456,7 @@ export default function AdminPage() {
                     </select>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm mb-1">Description</label>
-                  <textarea value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} rows={4} required className="w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-4 py-3 text-base" />
-                </div>
+                {/* Description field removed */}
 
                 <div>
                   <label className="block text-sm mb-2">Product Images</label>
@@ -560,7 +561,7 @@ export default function AdminPage() {
                           )}
                         </div>
                       )}
-                      <p className="text-sm text-zinc-500 mt-2 line-clamp-2">{preview.description}</p>
+                      {/* description removed from preview */}
                     </div>
                   </div>
                 )}

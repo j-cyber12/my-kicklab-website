@@ -1,0 +1,16 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/favicon.ico/route": "/favicon.ico",
+  "/api/admin/login/route": "/api/admin/login",
+  "/api/health/route": "/api/health",
+  "/api/health/cloudinary/route": "/api/health/cloudinary",
+  "/api/products/[id]/route": "/api/products/[id]",
+  "/api/uploads/[...path]/route": "/api/uploads/[...path]",
+  "/api/products/route": "/api/products",
+  "/api/upload/route": "/api/upload",
+  "/admin/page": "/admin",
+  "/page": "/",
+  "/product/[id]/page": "/product/[id]",
+  "/admin-portal-4f28c1/login/page": "/admin-portal-4f28c1/login",
+  "/admin-portal-4f28c1/page": "/admin-portal-4f28c1"
+}

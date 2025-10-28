@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="36" viewBox="0 0 140 36" role="img" aria-label="Vans">
+  <title>Vans</title>
+  <rect width="140" height="36" fill="none"/>
+  <g fill="#111">
+    <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+          font-family="system-ui,-apple-system,Segoe UI,Arial,sans-serif"
+          font-size="22" font-weight="700" letter-spacing="1">VANS</text>
+  </g>
+</svg>
+

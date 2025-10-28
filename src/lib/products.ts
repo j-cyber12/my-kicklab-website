@@ -10,7 +10,7 @@ export type Product = {
   images: string[];
   videoUrl?: string;
   sizes?: string[];
-  gender?: 'men' | 'women';
+  gender?: 'men' | 'women' | 'unisex';
   category?: 'shoes' | 'bags';
 };
 

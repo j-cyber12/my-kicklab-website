@@ -16,7 +16,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as Partial<Product>;
-    if (!body.name || body.price === undefined || !body.description) {
+    if (!body.name || body.price === undefined) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
     const baseId = (body.id || body.name!.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')) as string;
@@ -29,14 +29,14 @@ export async function POST(req: Request) {
       id = `${baseId}-${i}`;
     }
     // Normalize optional fields
-    const gender = body.gender === 'men' || body.gender === 'women' ? body.gender : undefined;
+    const gender = body.gender === 'men' || body.gender === 'women' || body.gender === 'unisex' ? body.gender : undefined;
     const category = body.category === 'shoes' || body.category === 'bags' ? body.category : undefined;
 
     const product: Product = {
       id,
       name: body.name!,
       price: Number(body.price),
-      description: body.description!,
+      description: (body.description ?? ''),
       thumbnail: body.thumbnail || (body.images && body.images[0]) || '/placeholder.svg',
       images: body.images || [],
       videoUrl: body.videoUrl || '',

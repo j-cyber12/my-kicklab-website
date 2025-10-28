@@ -34,7 +34,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         </div>
         <div className="animate-fade-up animate-delay-1">
           <h1 className="text-3xl md:text-4xl font-black tracking-tight">{product.name}</h1>
-          <p className="mt-3 text-muted">{product.description}</p>
+          {/* description removed */}
           {(product.gender || product.category) && (
             <div className="mt-3 flex gap-2 text-[11px]">
               {product.gender && (
