@@ -16,6 +16,11 @@ export type Product = {
 
 const COLLECTION = 'products';
 
+function hasValidMongoUri() {
+  const uri = process.env.MONGODB_URI || '';
+  return /^mongodb(\+srv)?:\/\//.test(uri);
+}
+
 async function ensureIndexes() {
   const db = await getDb();
   const col = db.collection(COLLECTION);
@@ -23,6 +28,7 @@ async function ensureIndexes() {
 }
 
 export async function readProducts(): Promise<Product[]> {
+  if (!hasValidMongoUri()) return [];
   await ensureIndexes();
   const db = await getDb();
   const col = db.collection<WithId<Product>>(COLLECTION);
@@ -40,6 +46,7 @@ export async function writeProducts(products: Product[]) {
 }
 
 export async function getProduct(id: string) {
+  if (!hasValidMongoUri()) return null;
   await ensureIndexes();
   const db = await getDb();
   const col = db.collection<Product>(COLLECTION);
