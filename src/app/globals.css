@@ -1,16 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f7f8;
-  --foreground: #0f0f10;
-  --bg-start: #f3f4f6;
+  --background: #f6f8fb;
+  --foreground: #0e1014;
+  --bg-start: #f3f6fb; /* soft cool gray */
   --bg-end: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f2f2f3;
-  --border: #e6e6e7;
+  --surface-2: #f4f6f9;
+  --border: #e4e7ee;
   --muted: #6b7280;
-  --accent-start: #111827; /* near black */
-  --accent-end: #3f3f46;   /* zinc-700 */
+  /* Modern brand gradient: blue → violet */
+  --accent-start: #2563eb; /* indigo-600 */
+  --accent-end: #7c3aed;   /* violet-600 */
 }
 
 @theme inline {
@@ -18,20 +19,21 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0b;
-    --foreground: #ededee;
-    --bg-start: #000000;
-    --bg-end: #0b0b0c;
-    --surface: #101113;
-    --surface-2: #141518;
-    --border: #26262a;
-    --muted: #9ca3af;
-    --accent-start: #111827;
-    --accent-end: #27272a;
+    --background: #0b0d12;
+    --foreground: #eceef3;
+    --bg-start: #05060a;
+    --bg-end: #0c0f16;
+    --surface: #11131a;
+    --surface-2: #151926;
+    --border: #23283a;
+    --muted: #a1a6b3;
+    --accent-start: #1d4ed8; /* indigo-700 */
+    --accent-end: #6d28d9;   /* violet-700 */
   }
 }
 
@@ -41,6 +43,8 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.font-display { font-family: var(--font-display), var(--font-sans); }
+
 /* Design tokens to update colors site‑wide */
 .bg-app { background: linear-gradient(to bottom, var(--bg-start), var(--bg-end)); }
 .surface { background-color: var(--surface); }
@@ -48,6 +52,37 @@ body {
 .border-token { border-color: color-mix(in srgb, var(--border) 100%, transparent); }
 .text-muted { color: var(--muted); }
 .accent-gradient { background-image: linear-gradient(135deg, var(--accent-start), var(--accent-end)); }
+
+/* Modern buttons */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border transition duration-200 select-none;
+  border-color: color-mix(in srgb, var(--border) 100%, transparent);
+}
+.btn-primary {
+  @apply text-white shadow-sm hover:opacity-95 active:opacity-90;
+  background-image: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+}
+.btn-outline {
+  @apply text-foreground hover:bg-zinc-50/60 dark:hover:bg-zinc-900/60;
+  background-color: var(--surface-2);
+}
+.btn-ghost {
+  @apply bg-transparent text-foreground hover:bg-zinc-100/60 dark:hover:bg-zinc-900/60;
+}
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-end) 30%, transparent); }
+
+/* Panels and chips for a clean, modern look */
+.panel {
+  background-color: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--border) 100%, transparent);
+  border-radius: 1rem; /* ~16px */
+  box-shadow: 0 8px 30px rgba(2, 6, 23, 0.06);
+}
+.chip {
+  @apply inline-flex items-center justify-center text-sm px-3 py-1.5 rounded-full;
+  background-color: var(--surface-2);
+  border: 1px solid color-mix(in srgb, var(--border) 100%, transparent);
+}
 
 /* Simple animation utilities */
 @keyframes fade-up {

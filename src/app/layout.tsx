@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono, Playfair_Display } from 'next/font/google';
+import { Geist, Geist_Mono, Playfair_Display, Montserrat } from 'next/font/google';
 import './globals.css';
 
 const geistSans = Geist({
@@ -16,6 +16,12 @@ const playfair = Playfair_Display({
   variable: "--font-playfair",
   subsets: ["latin"],
   weight: ["400", "700", "900"],
+});
+
+const montserrat = Montserrat({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -36,7 +42,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased bg-app text-zinc-900 dark:text-zinc-100`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${montserrat.variable} antialiased bg-app text-zinc-900 dark:text-zinc-100`}>
         {/* Header removed: branding now lives in the banner */}
         <main>{children}</main>
         <footer className="border-t border-token mt-16">
@@ -49,4 +55,3 @@ export default function RootLayout({
     </html>
   );
 }
-

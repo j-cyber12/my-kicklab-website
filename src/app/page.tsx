@@ -1,22 +1,46 @@
-import Link from 'next/link';
-import { readProducts, type Product } from '@/lib/products';
-// images helper not needed here; used in carousel component
+﻿import Link from 'next/link';
+import { readProducts, type PricedProduct } from '@/lib/products';
+import { readSalesSettings, type SalesSettings } from '@/lib/sales';
 import ProductThumbCarousel from '@/components/ProductThumbCarousel';
-import Marquee from '@/components/Marquee';
-import BrandIcon, { type Brand } from '@/components/BrandIcon';
+import CartButton from '@/components/CartButton';
+import SaleProductsCarousel from '@/components/SaleProductsCarousel';
+import SearchBar from '@/components/SearchBar';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export default async function Home({ searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = (await (searchParams || Promise.resolve({}))) as Record<string, string | string[] | undefined>;
-  const gender = typeof sp.gender === 'string' ? sp.gender : undefined;
-  const category = typeof sp.category === 'string' ? sp.category : undefined;
+  const genderFilter = typeof sp.gender === 'string' ? sp.gender : undefined;
+  const categoryFilter = typeof sp.category === 'string' ? sp.category : undefined;
+  
+  const q = typeof sp.q === 'string' ? sp.q : '';
+  
+  const saleParam = typeof sp.sale === 'string' ? sp.sale : undefined;
+  const saleOnly = saleParam === '1' || saleParam === 'true';
 
-  const products: Product[] = await readProducts();
-  const filtered = products.filter((p) => (!gender || p.gender === gender) && (!category || p.category === category));
+  const products: PricedProduct[] = await readProducts();
+  const sales: SalesSettings = await readSalesSettings();
+  const qLower = q.trim().toLowerCase();
+  const matchesText = (p: PricedProduct) => !qLower || p.name.toLowerCase().includes(qLower) || (p.description || '').toLowerCase().includes(qLower);
+  const onSale = products.filter((p) => (!!p.sale)
+    && (!genderFilter || p.gender === genderFilter)
+    && (!categoryFilter || p.category === categoryFilter)
+    && matchesText(p)
+  );
+  const filtered = products.filter((p) => (!genderFilter || p.gender === genderFilter)
+    && (!categoryFilter || p.category === categoryFilter)
+    && (!saleOnly || !!p.sale)
+    && matchesText(p)
+  );
+  const slippers = products.filter((p) => p.category === 'slippers');
+
   return (
     <div className="max-w-6xl mx-auto">
+      <div className="hidden sm:block">
+        <CartButton />
+      </div>
+
       {/* Hero banner */}
       <section className="px-4 pb-4" style={{ paddingTop: 'max(env(safe-area-inset-top), 1rem)' }}>
         <div
@@ -29,15 +53,17 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
           <div className="absolute inset-0 pointer-events-none opacity-20" style={{backgroundImage:'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.15) 50%, rgba(255,255,255,0) 100%)'}} />
           <div className="relative min-h-[46vh] md:min-h-[60vh] grid place-items-center text-center">
             <div>
-              {/* Wordmark and slogan only */}
               <div style={{ fontFamily: 'var(--font-playfair)' }} className="font-black tracking-wide">
-                <h1 className="text-4xl sm:text-5xl md:text-7xl leading-none">LUVRÉ</h1>
+                <h1 className="text-4xl sm:text-5xl md:text-7xl leading-none">Luvre</h1>
               </div>
               <p className="mt-4 text-xs sm:text-sm tracking-[0.35em] uppercase opacity-90">Walk With Elegance</p>
               <div className="mt-6">
-                <Link href="#all" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-zinc-900 font-medium shadow-sm hover:shadow transition">
-                  Shop Now
+                <Link href="/?sale=1#all" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-zinc-900 font-medium shadow-sm hover:shadow transition">
+                  View All
                 </Link>
+              </div>
+              <div className="mt-5 hidden sm:block px-4">
+                <SearchBar initialQuery={q} initialCategory={categoryFilter || ''} variant="desktop" />
               </div>
             </div>
           </div>
@@ -45,44 +71,58 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
         </div>
       </section>
 
-      {/* Brand icons & promo continuous marquee under banner */}
-      <section className="px-4 mt-2">
-        <div className="relative overflow-hidden -mx-1 px-1 py-1">
-          {(() => {
-            const items: { type: 'brand' | 'text'; label: string; key?: Brand }[] = [
-              { type: 'brand', label: 'Nike', key: 'nike' },
-              { type: 'text', label: 'New items each week' },
-              { type: 'brand', label: 'Adidas', key: 'adidas' },
-              { type: 'text', label: 'Best prices' },
-              { type: 'brand', label: 'Alexander McQueen', key: 'alexandermcqueen' },
-              { type: 'text', label: 'High quality' },
-              { type: 'brand', label: 'Vans', key: 'vans' },
-              { type: 'text', label: 'Fast shipping' },
-            ];
-            const nodes = items.map((item, i) =>
-              item.type === 'brand' ? (
-                <div key={`${item.type}-${item.label}-${i}`} className="flex items-center">
-                  {item.key ? (
-                    <BrandIcon name={item.key} className="h-6 sm:h-7 w-auto text-zinc-900 dark:text-zinc-100" />
-                  ) : (
-                    <span className="text-sm sm:text-base font-semibold whitespace-nowrap">{item.label}</span>
-                  )}
-                </div>
-              ) : (
-                <div
-                  key={`${item.type}-${item.label}-${i}`}
-                  className="px-3 py-1.5 rounded-full border border-token surface text-[10px] sm:text-xs text-muted whitespace-nowrap"
-                >
-                  {item.label}
-                </div>
-              )
-            );
-            return <Marquee items={nodes} speed={42} gapPx={12} />;
-          })()}
-        </div>
+      {/* Mobile search (only on phones) */}
+      <section className="px-4 sm:hidden mt-4">
+        <SearchBar initialQuery={q} initialCategory={categoryFilter || ''} variant="mobile" />
       </section>
 
-      {/* Featured carousel removed per request */}
+      {/* Active sale banner */}
+      {(() => {
+        const now = Date.now();
+        const parts: string[] = [];
+        function active(win?: { enabled?: boolean; percent?: number; startAt?: string; endAt?: string }) {
+          if (!win || win.enabled === false || !(win.percent && win.percent > 0)) return false;
+          const s = win.startAt ? Date.parse(win.startAt) : NaN;
+          const e = win.endAt ? Date.parse(win.endAt) : NaN;
+          if (!Number.isNaN(s) && now < s) return false;
+          if (!Number.isNaN(e) && now > e) return false;
+          return true;
+        }
+        if (active(sales?.global)) parts.push(`Sitewide ${sales.global!.percent}% off`);
+        const cats = sales?.categories || {};
+        for (const key of Object.keys(cats)) {
+          if (active(cats[key])) parts.push(`${key[0].toUpperCase()}${key.slice(1)} ${cats[key]!.percent}% off`);
+        }
+        const flashItems = Array.isArray(sales?.flash?.items) ? sales.flash!.items! : [];
+        const activeFlash = flashItems.filter((it) => active(it));
+        if (activeFlash.length > 0) parts.push(`${activeFlash.length} flash ${activeFlash.length === 1 ? 'deal' : 'deals'}`);
+        if (!parts.length) return null;
+        return (
+          <section className="px-4 mt-3">
+            <div className="rounded-xl border border-token surface p-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-600 text-white text-xs font-bold">%</span>
+                <div className="text-sm font-medium">{parts.join(' • ')}</div>
+              </div>
+              <Link href="#all" className="text-sm text-blue-600 hover:underline">Shop deals</Link>
+            </div>
+          </section>
+        );
+      })()}
+
+      
+      {/* Slippers animated carousel */}
+      {slippers.length > 0 && (
+        <section className="px-4 mt-6">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold">Slippers</h2>
+            <Link href="/?category=slippers#all" className="text-sm text-blue-600 hover:underline">View all</Link>
+          </div>
+          <SaleProductsCarousel
+            items={slippers.map((p) => ({ id: p.id, name: p.name, imageUrl: (p.thumbnail || p.images?.[0] || '/placeholder.svg') as string }))}
+          />
+        </section>
+      )}
 
       {/* All products grid */}
       <section id="all" className="px-4 mt-6 pb-24">
@@ -97,38 +137,53 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
               href={`/product/${p.id}`}
               className="group rounded-xl overflow-hidden border border-token surface hover-lift"
             >
-              <div className="aspect-[4/5] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+              <div className="relative aspect-[4/5] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                {p.sale && (
+                  <span className="absolute top-2 left-2 z-10 text-[10px] font-semibold px-2 py-1 rounded-full bg-red-600 text-white shadow">Sale</span>
+                )}
                 <ProductThumbCarousel product={p} preset="grid" />
               </div>
               <div className="p-2">
                 <div className="text-[13px] font-medium truncate">{p.name || '(Untitled)'}</div>
-                {/* description removed */}
-                {(p.gender || p.category) && (
-                  <div className="mt-1 flex gap-2 text-[11px]">
-                    {p.gender ? (
-                      <span className="px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 uppercase tracking-wide">{p.gender}</span>
-                    ) : null}
-                    {p.category ? (
-                      <span className="px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 uppercase tracking-wide">{p.category}</span>
-                    ) : null}
-                  </div>
-                )}
-                <div className="mt-1 text-sm font-semibold">{'$'}{Number.isFinite(Number(p.price)) ? Number(p.price).toFixed(2) : '0.00'}</div>
+                {/* gender/category chips removed per request */}
+                <div className="mt-1 text-sm font-semibold flex items-center gap-2">
+                  {'$'}{Number.isFinite(Number(p.price)) ? Number(p.price).toFixed(2) : '0.00'}
+                  {p.sale && (
+                    <>
+                      <span className="text-xs line-through text-zinc-500">{'$'}{Number(p.originalPrice).toFixed(2)}</span>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-600 text-white">-{p.sale.percent}%</span>
+                    </>
+                  )}
+                </div>
               </div>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* Bottom mobile tab bar */}
       <nav className="sm:hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-40">
         <div className="rounded-full border border-zinc-200/70 dark:border-zinc-800/70 bg-white/90 dark:bg-zinc-900/90 backdrop-blur px-4 py-2 flex items-center gap-6 shadow-lg">
-          <Link href="/" className="flex flex-col items-center text-xs">
-            <span className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500" />
-            <span className="mt-1">Home</span>
-          </Link>
+          <CartButton variant="inline" />
         </div>
       </nav>
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

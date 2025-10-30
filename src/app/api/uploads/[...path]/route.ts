@@ -21,11 +21,16 @@ const MIME: Record<string, string> = {
   '.mp4': 'video/mp4',
 };
 
-type Ctx = { params: Promise<{ path: string[] }> };
+type Params = { path: string[] };
+type Ctx = { params: Params | Promise<Params> };
 
 export async function GET(_req: Request, { params }: Ctx) {
   try {
-    const { path: parts } = await params;
+    const resolved = (typeof (params as any)?.then === 'function') ? await (params as Promise<Params>) : (params as Params);
+    const parts = Array.isArray(resolved?.path) ? resolved.path : [];
+    if (parts.length === 0) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
     const safe = parts.join('/').replace(/\\+/g, '/').replace(/\.\.+/g, '');
     const filePath = path.join(CONFIG_UPLOAD_DIR, safe);
     const data = await fs.readFile(filePath);
@@ -41,4 +46,3 @@ export async function GET(_req: Request, { params }: Ctx) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 }
-

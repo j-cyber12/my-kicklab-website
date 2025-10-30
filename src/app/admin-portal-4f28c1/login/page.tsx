@@ -15,7 +15,7 @@ export default function AdminLogin() {
     const res = await fetch('/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ password: password.trim() }),
     });
     setLoading(false);
     if (res.ok) {
@@ -52,4 +52,3 @@ export default function AdminLogin() {
     </div>
   );
 }
-

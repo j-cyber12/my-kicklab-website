@@ -6,9 +6,10 @@ const DEFAULT_PASSWORD = 'K!ckLab#2025_X9v7';
 
 export async function POST(req: Request) {
   try {
-    const { password } = await req.json();
-    const adminPassword = process.env.ADMIN_PASSWORD || DEFAULT_PASSWORD;
-    if (typeof password !== 'string' || password !== adminPassword) {
+    const body = await req.json();
+    const submitted = typeof body?.password === 'string' ? body.password.trim() : '';
+    const adminPassword = (process.env.ADMIN_PASSWORD || DEFAULT_PASSWORD).trim();
+    if (!submitted || submitted !== adminPassword) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const res = NextResponse.json({ ok: true });
@@ -25,4 +26,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 }
-

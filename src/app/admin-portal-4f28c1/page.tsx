@@ -14,7 +14,9 @@ type Product = {
   videoUrl?: string;
   sizes?: string[];
   gender?: 'men' | 'women' | 'unisex';
-  category?: 'shoes' | 'bags';
+  category?: 'shoes' | 'bags' | 'heels' | 'slippers';
+  onSale?: boolean;
+  salePrice?: number;
 };
 
 type Draft = {
@@ -23,7 +25,9 @@ type Draft = {
   price: string;
   description: string;
   gender: '' | 'men' | 'women' | 'unisex';
-  category: '' | 'shoes' | 'bags';
+  category: '' | 'shoes' | 'bags' | 'heels' | 'slippers';
+  onSale: boolean;
+  salePrice: string;
 };
 
 function slugify(input: string) {
@@ -38,10 +42,10 @@ export default function AdminPage() {
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<'name-asc' | 'price-asc' | 'price-desc'>('name-asc');
   const [filterGender, setFilterGender] = useState<'' | 'men' | 'women' | 'unisex'>('');
-  const [filterCategory, setFilterCategory] = useState<'' | 'shoes' | 'bags'>('');
+  const [filterCategory, setFilterCategory] = useState<'' | 'shoes' | 'bags' | 'heels' | 'slippers'>('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Draft>({ id: '', name: '', price: '', description: '', gender: '', category: '' });
+  const [draft, setDraft] = useState<Draft>({ id: '', name: '', price: '', description: '', gender: '', category: '', onSale: false, salePrice: '' });
   const [images, setImages] = useState<(string | File)[]>([]);
   const [video, setVideo] = useState<string | File | null>(null);
   const [sizes, setSizes] = useState<string[]>([]);
@@ -54,8 +58,10 @@ export default function AdminPage() {
   // Simple inline validation for better UX
   const priceNumber = parseFloat(draft.price || '');
   const priceError = draft.price !== '' && (Number.isNaN(priceNumber) || priceNumber < 0) ? 'Enter a valid price' : null;
+  const salePriceNumber = parseFloat(draft.salePrice || '');
+  const salePriceError = draft.onSale && (draft.salePrice === '' || Number.isNaN(salePriceNumber) || salePriceNumber <= 0 || (!Number.isNaN(priceNumber) && salePriceNumber >= priceNumber)) ? 'Enter a valid sale price less than price' : null;
   const nameError = draft.name.trim() === '' ? 'Name is required' : null;
-  const formInvalid = !!nameError || !!priceError;
+  const formInvalid = !!nameError || !!priceError || !!salePriceError;
 
   function showToast(msg: string) {
     setToast(msg);
@@ -114,7 +120,7 @@ export default function AdminPage() {
 
   function openCreate() {
     setEditingId(null);
-    setDraft({ id: '', name: '', price: '', description: '', gender: '', category: '' });
+    setDraft({ id: '', name: '', price: '', description: '', gender: '', category: '', onSale: false, salePrice: '' });
     setImages([]);
     setVideo(null);
     setSizes([]);
@@ -130,6 +136,8 @@ export default function AdminPage() {
       description: p.description,
       gender: p.gender || '',
       category: p.category || '',
+      onSale: !!p.onSale,
+      salePrice: p.salePrice !== undefined ? String(p.salePrice) : '',
     });
     setImages(p.images || []);
     setVideo(p.videoUrl || null);
@@ -216,6 +224,8 @@ export default function AdminPage() {
       sizes,
       gender: draft.gender || undefined,
       category: draft.category || undefined,
+      onSale: draft.onSale,
+      salePrice: draft.onSale ? (draft.salePrice ? parseFloat(draft.salePrice) : undefined) : undefined,
     };
     let ok = false;
     if (editingId) {
@@ -245,6 +255,31 @@ export default function AdminPage() {
 
   function remove(id: string) {
     setConfirmDeleteId(id);
+  }
+
+  async function toggleSale(p: Product, nextOn: boolean) {
+    try {
+      const defaultSale = Math.round((p.price * 0.8) * 100) / 100; // default 20% off if missing
+      const body: any = { onSale: nextOn };
+      if (nextOn) {
+        const target = (typeof p.salePrice === 'number' && p.salePrice > 0 && p.salePrice < p.price) ? p.salePrice : defaultSale;
+        body.salePrice = target;
+      }
+      const res = await fetch(`/api/products/${p.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        showToast('Failed to update sale');
+        return;
+      }
+      const updated = await res.json();
+      setProducts((list) => list.map((it) => it.id === p.id ? { ...it, onSale: updated.onSale, salePrice: updated.salePrice } : it));
+      showToast(nextOn ? 'Sale enabled' : 'Sale disabled');
+    } catch {
+      showToast('Failed to update sale');
+    }
   }
 
   async function confirmDelete() {
@@ -307,6 +342,8 @@ export default function AdminPage() {
         </div>
       </div>
 
+      {/* Sales settings panel removed as requested */}
+
       <div className="flex flex-wrap items-center gap-3 mb-5">
         <div className="flex items-center gap-2 rounded-full border border-zinc-300/80 dark:border-zinc-700/80 px-3 py-1.5 bg-white dark:bg-zinc-900 w-full sm:w-80">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-60"><path d="M21 21L15.8 15.8M18 10.5C18 14.0899 15.0899 17 11.5 17C7.91015 17 5 14.0899 5 10.5C5 6.91015 7.91015 4 11.5 4C15.0899 4 18 6.91015 18 10.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -333,12 +370,14 @@ export default function AdminPage() {
         </select>
         <select
           value={filterCategory}
-          onChange={(e) => setFilterCategory(e.target.value as '' | 'shoes' | 'bags')}
+          onChange={(e) => setFilterCategory(e.target.value as '' | 'shoes' | 'bags' | 'heels' | 'slippers')}
           className="rounded-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1.5 text-sm"
         >
           <option value="">All Categories</option>
           <option value="shoes">Shoes</option>
           <option value="bags">Bags</option>
+          <option value="heels">Heels</option>
+          <option value="slippers">Slippers</option>
         </select>
       </div>
 
@@ -364,20 +403,20 @@ export default function AdminPage() {
                 </div>
                 <div className="font-semibold">{'$'}{Number.isFinite(Number(p.price)) ? Number(p.price).toFixed(2) : '0.00'}</div>
               </div>
-              {(p.gender || p.category) && (
-                <div className="mt-2 flex gap-2 text-[11px]">
-                  {p.gender && (
-                    <span className="px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 uppercase tracking-wide">{p.gender}</span>
-                  )}
-                  {p.category && (
-                    <span className="px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 uppercase tracking-wide">{p.category}</span>
-                  )}
-                </div>
-              )}
+              {/* gender/category chips removed per request */}
               {/* description hidden */}
               <div className="flex items-center gap-3 mt-4 text-sm">
                 <button onClick={() => openEdit(p)} className="px-3 py-1.5 rounded-full border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800">Edit</button>
-                <button onClick={() => duplicate(p)} className="px-3 py-1.5 rounded-full border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800">Duplicate</button>
+                <button
+                  type="button"
+                  onClick={() => toggleSale(p, !p.onSale)}
+                  className={`${p.onSale
+                    ? 'px-3 py-1.5 rounded-full border border-green-600 bg-green-500 text-white hover:bg-green-600'
+                    : 'px-3 py-1.5 rounded-full border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800'} transition-colors`}
+                  aria-pressed={p.onSale ? 'true' : 'false'}
+                >
+                  Sale
+                </button>
                 <button onClick={() => remove(p.id)} className="ml-auto text-red-600 hover:text-red-700">Delete</button>
               </div>
             </div>
@@ -450,10 +489,36 @@ export default function AdminPage() {
                       onChange={(e) => setDraft({ ...draft, category: e.target.value as Draft['category'] })}
                       className="w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-4 py-3 text-base"
                     >
-                      <option value="">— Select —</option>
+                      <option value="">- Select -</option>
                       <option value="shoes">Shoes</option>
                       <option value="bags">Bags</option>
+                      <option value="heels">Heels</option>
+                      <option value="slippers">Slippers</option>
                     </select>
+                  </div>
+                </div>
+                {/* Manual Sale Controls */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label className="inline-flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={draft.onSale} onChange={(e) => setDraft({ ...draft, onSale: e.target.checked })} />
+                    On Sale
+                  </label>
+                  <div>
+                    <label className="block text-sm mb-1">Sale Price</label>
+                    <input
+                      value={draft.salePrice}
+                      onChange={(e) => setDraft({ ...draft, salePrice: e.target.value })}
+                      type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      disabled={!draft.onSale}
+                      aria-invalid={!!salePriceError}
+                      aria-describedby={salePriceError ? 'sale-price-error' : undefined}
+                      className="w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-4 py-3 text-base disabled:opacity-50"
+                    />
+                    {salePriceError && <p id="sale-price-error" className="mt-1 text-xs text-red-600">{salePriceError}</p>}
                   </div>
                 </div>
                 {/* Description field removed */}
@@ -534,7 +599,7 @@ export default function AdminPage() {
                     {saving ? 'Saving…' : 'Save'}
                   </button>
                   {editingId && (
-                    <button type="button" onClick={() => { setDraft({ id: '', name: '', price: '', description: '', gender: '', category: '' }); setImages([]); setVideo(null); }} className="px-3 py-2 rounded-full border border-zinc-300 dark:border-zinc-700">Clear</button>
+                    <button type="button" onClick={() => { setDraft({ id: '', name: '', price: '', description: '', gender: '', category: '', onSale: false, salePrice: '' }); setImages([]); setVideo(null); }} className="px-3 py-2 rounded-full border border-zinc-300 dark:border-zinc-700">Clear</button>
                   )}
                 </div>
               </form>
@@ -591,3 +656,10 @@ export default function AdminPage() {
     </div>
   );
 }
+
+
+
+
+
+
+

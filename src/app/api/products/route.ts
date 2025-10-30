@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { readProducts, upsertProduct, type Product } from '@/lib/products';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
     }
     // Normalize optional fields
     const gender = body.gender === 'men' || body.gender === 'women' || body.gender === 'unisex' ? body.gender : undefined;
-    const category = body.category === 'shoes' || body.category === 'bags' ? body.category : undefined;
+    const category = body.category === 'shoes' || body.category === 'bags' || body.category === 'heels' || body.category === 'slippers' ? body.category : undefined;
 
     const product: Product = {
       id,
@@ -43,6 +44,8 @@ export async function POST(req: Request) {
       sizes: Array.isArray(body.sizes) ? (body.sizes as string[]).map((s) => String(s).trim()).filter(Boolean) : [],
       gender,
       category,
+      onSale: body.onSale === true,
+      salePrice: body.onSale === true && body.salePrice !== undefined ? Number(body.salePrice) : undefined,
     };
     const saved = await upsertProduct(product);
     return NextResponse.json(saved, { status: 201 });
@@ -50,3 +53,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 }
+
