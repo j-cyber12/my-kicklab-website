@@ -19,7 +19,11 @@ export default function AdminLogin() {
     });
     setLoading(false);
     if (res.ok) {
-      router.replace('/admin-portal-4f28c1');
+      if (typeof window !== 'undefined') {
+        window.location.href = '/admin-portal-4f28c1';
+      } else {
+        router.replace('/admin-portal-4f28c1');
+      }
     } else {
       const data = await res.json().catch(() => ({}));
       setError(data?.error || 'Invalid password');
@@ -39,13 +43,13 @@ export default function AdminLogin() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-md border border-token bg-transparent px-3 py-2"
-              placeholder="••••••••"
+              placeholder="������"
               required
             />
           </div>
           {error && <div className="text-sm text-red-600">{error}</div>}
           <button disabled={loading} className="w-full px-4 py-2 rounded-full accent-gradient text-white font-medium shadow hover:opacity-90 transition-opacity disabled:opacity-50">
-            {loading ? 'Checking…' : 'Continue'}
+            {loading ? 'Checking�' : 'Continue'}
           </button>
         </form>
       </div>

@@ -33,7 +33,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               )}
             </div>
           )}
-          {(product.sizes?.length) && (
+          {(Array.isArray(product.sizes) && product.sizes.length > 0) && (
             <div className="mt-4 space-y-3">
               {product.sizes?.length ? (
                 <div>
@@ -75,3 +75,4 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     </div>
   );
 }
+
