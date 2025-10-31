@@ -26,7 +26,7 @@ type Ctx = { params: Params | Promise<Params> };
 
 export async function GET(_req: Request, { params }: Ctx) {
   try {
-    const resolved = (typeof (params as any)?.then === 'function') ? await (params as Promise<Params>) : (params as Params);
+    const resolved: Params = await Promise.resolve(params as Params | Promise<Params>);
     const parts = Array.isArray(resolved?.path) ? resolved.path : [];
     if (parts.length === 0) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });

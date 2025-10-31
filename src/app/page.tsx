@@ -23,11 +23,6 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
   const sales: SalesSettings = await readSalesSettings();
   const qLower = q.trim().toLowerCase();
   const matchesText = (p: PricedProduct) => !qLower || p.name.toLowerCase().includes(qLower) || (p.description || '').toLowerCase().includes(qLower);
-  const onSale = products.filter((p) => (!!p.sale)
-    && (!genderFilter || p.gender === genderFilter)
-    && (!categoryFilter || p.category === categoryFilter)
-    && matchesText(p)
-  );
   const filtered = products.filter((p) => (!genderFilter || p.gender === genderFilter)
     && (!categoryFilter || p.category === categoryFilter)
     && (!saleOnly || !!p.sale)
@@ -169,6 +164,10 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
     </div>
   );
 }
+
+
+
+
 
 
 

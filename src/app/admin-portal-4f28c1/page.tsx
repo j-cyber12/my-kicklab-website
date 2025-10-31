@@ -145,26 +145,7 @@ export default function AdminPage() {
     setModalOpen(true);
   }
 
-  async function duplicate(p: Product) {
-    const base = `${p.name} Copy`;
-    const body = {
-      name: base,
-      price: p.price,
-      thumbnail: p.thumbnail,
-      images: p.images,
-      videoUrl: p.videoUrl,
-      sizes: p.sizes,
-      gender: p.gender,
-      category: p.category,
-    };
-    const res = await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (res.ok) {
-      showToast('Product duplicated');
-      await load();
-    } else {
-      showToast('Failed to duplicate');
-    }
-  }
+  // Duplicate feature removed per request; function deleted to satisfy lint
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -260,7 +241,7 @@ export default function AdminPage() {
   async function toggleSale(p: Product, nextOn: boolean) {
     try {
       const defaultSale = Math.round((p.price * 0.8) * 100) / 100; // default 20% off if missing
-      const body: any = { onSale: nextOn };
+      const body: { onSale: boolean; salePrice?: number } = { onSale: nextOn };
       if (nextOn) {
         const target = (typeof p.salePrice === 'number' && p.salePrice > 0 && p.salePrice < p.price) ? p.salePrice : defaultSale;
         body.salePrice = target;

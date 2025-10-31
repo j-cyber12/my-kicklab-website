@@ -38,7 +38,9 @@ export default function ProductShareButton({ id, name, price, imageUrl }: Props)
         }
       }
 
-      const canShareFiles = file && typeof navigator !== "undefined" && "canShare" in navigator && (navigator as any).canShare?.({ files: [file] });
+      type NavigatorCanShare = Navigator & { canShare?: (data: { files?: File[] }) => boolean };
+      const nav = (typeof navigator !== "undefined" ? (navigator as NavigatorCanShare) : undefined);
+      const canShareFiles = !!(file && nav?.canShare && nav.canShare({ files: [file] }));
 
       if (typeof navigator !== "undefined" && navigator.share) {
         try {

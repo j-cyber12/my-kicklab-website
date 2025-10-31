@@ -73,7 +73,7 @@ export async function getProduct(id: string): Promise<PricedProduct | null> {
   const col = db.collection<Product>(COLLECTION);
   const doc = await col.findOne({ id });
   if (!doc) return null;
-  const { _id: _mongoId, ...rest } = doc as any;
+  const { _id: _mongoId, ...rest } = doc as WithId<Product>;
   void _mongoId;
   const base = (rest as Product).price;
   const manual = (rest as Product).onSale && Number((rest as Product).salePrice) > 0 && Number((rest as Product).salePrice) < base
