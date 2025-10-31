@@ -42,6 +42,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-7PW0XLZP9Q"></script>
+        <script>
+          {`
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-7PW0XLZP9Q');
+          `}
+        </script>
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${montserrat.variable} antialiased bg-app text-zinc-900 dark:text-zinc-100`}>
         {/* Header removed: branding now lives in the banner */}
         <main>{children}</main>
