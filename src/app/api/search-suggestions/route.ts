@@ -15,7 +15,7 @@ export async function GET(req: Request) {
       .slice(0, 8)
       .map((p) => ({ id: p.id, name: p.name, imageUrl: p.thumbnail || p.images?.[0] || '/placeholder.svg' }));
     return NextResponse.json({ items });
-  } catch (_err) {
+  } catch {
     return NextResponse.json({ items: [] });
   }
 }

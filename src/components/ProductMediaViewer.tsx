@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "@/lib/products";
 import { cld } from "@/lib/images";
 
@@ -33,12 +33,12 @@ export default function ProductMediaViewer({ product }: Props) {
     setOrigin({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
   }
 
-  function prev() {
+  const prev = useCallback(() => {
     setIdx((i) => (i - 1 + images.length) % images.length);
-  }
-  function next() {
+  }, [images.length]);
+  const next = useCallback(() => {
     setIdx((i) => (i + 1) % images.length);
-  }
+  }, [images.length]);
 
   useEffect(() => {
     if (!lightbox) return;
@@ -49,7 +49,7 @@ export default function ProductMediaViewer({ product }: Props) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [lightbox, images.length]);
+  }, [lightbox, prev, next]);
 
   return (
     <div className="space-y-4">
@@ -84,7 +84,6 @@ export default function ProductMediaViewer({ product }: Props) {
               const src = cld(img, "gallery");
               const isActive = i === idx;
               return (
-                // eslint-disable-next-line jsx-a11y/alt-text, @next/next/no-img-element
                 <button
                   key={i}
                   type="button"
@@ -101,7 +100,7 @@ export default function ProductMediaViewer({ product }: Props) {
                   }`}
                   aria-label={`View image ${i + 1}`}
                 >
-                  <img src={src} className="w-full h-24 object-cover transition-transform duration-200 group-hover:scale-[1.06]" />
+                  <img src={src} alt={`${product.name} thumbnail ${i + 1}`} className="w-full h-24 object-cover transition-transform duration-200 group-hover:scale-[1.06]" />
                   {images.length > 4 && i === thumbs.length - 1 && (
                     <span className="absolute inset-0 bg-black/40 text-white text-sm font-medium flex items-center justify-center">+{images.length - 4}</span>
                   )}
@@ -116,7 +115,6 @@ export default function ProductMediaViewer({ product }: Props) {
               const src = cld(img, "gallery");
               const isActive = i === idx;
               return (
-                // eslint-disable-next-line jsx-a11y/alt-text, @next/next/no-img-element
                 <button
                   key={i}
                   type="button"
@@ -133,7 +131,7 @@ export default function ProductMediaViewer({ product }: Props) {
                   }`}
                   aria-label={`View image ${i + 1}`}
                 >
-                  <img src={src} className="w-[88px] h-[88px] object-cover transition-transform duration-200 group-hover:scale-[1.06]" />
+                  <img src={src} alt={`${product.name} thumbnail ${i + 1}`} className="w-[88px] h-[88px] object-cover transition-transform duration-200 group-hover:scale-[1.06]" />
                   {images.length > 4 && i === thumbs.length - 1 && (
                     <span className="absolute inset-0 bg-black/40 text-white text-sm font-medium flex items-center justify-center">+{images.length - 4}</span>
                   )}

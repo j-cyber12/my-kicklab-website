@@ -50,7 +50,7 @@ export default function ProductShareButton({ id, name, price, imageUrl }: Props)
             await navigator.share({ text: `${text} ${url}` });
           }
           return;
-        } catch (err) {
+        } catch {
           // If user cancels or share fails, fall through to WhatsApp fallback
         }
       }

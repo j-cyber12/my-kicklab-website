@@ -22,12 +22,12 @@ const MIME: Record<string, string> = {
 };
 
 type Params = { path: string[] };
-type Ctx = { params: Params | Promise<Params> };
+type Ctx = { params: Promise<Params> };
 
 export async function GET(_req: Request, { params }: Ctx) {
   try {
-    const resolved: Params = await Promise.resolve(params as Params | Promise<Params>);
-    const parts = Array.isArray(resolved?.path) ? resolved.path : [];
+    const resolved = await params;
+    const parts = Array.isArray(resolved.path) ? resolved.path : [];
     if (parts.length === 0) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
