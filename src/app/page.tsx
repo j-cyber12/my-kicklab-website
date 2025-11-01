@@ -29,6 +29,7 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
     && matchesText(p)
   );
   const slippers = products.filter((p) => p.category === 'slippers');
+  const heels = products.filter((p) => p.category === 'heels');
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -116,6 +117,28 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
           <SaleProductsCarousel
             items={slippers.map((p) => ({ id: p.id, name: p.name, imageUrl: (p.thumbnail || p.images?.[0] || '/placeholder.svg') as string }))}
           />
+        </section>
+      )}
+
+      {/* Heels Collection grid */}
+      {heels.length > 0 && (
+        <section className="heels-section">
+          <h2>Heels Collection</h2>
+          <div className="heels-grid">
+            {heels.map((p) => (
+              <Link key={p.id} href={`/product/${p.id}`} className="heel-item group">
+                <div className="media">
+                  {/* Using direct img to keep simple and fast */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={(p.thumbnail || p.images?.[0] || '/placeholder.svg') as string} alt={p.name || 'Heels'} />
+                </div>
+                <p>{p.name || 'Elegant Heels'}</p>
+              </Link>
+            ))}
+          </div>
+          <div className="text-center mt-4">
+            <Link href="/?category=heels#all" className="view-all-heels">View All Heels</Link>
+          </div>
         </section>
       )}
 

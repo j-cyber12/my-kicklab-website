@@ -60,6 +60,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 )}
               </div>
               <WhatsAppCartButton
+                label="Buy"
                 prefill={{ id: product.id, name: product.name, price: product.price, qty: 1, imageUrl: mainImage }}
               />
               <AddToCartButton

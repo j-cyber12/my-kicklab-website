@@ -87,7 +87,7 @@ export default function CartPage() {
             <button className="text-sm text-zinc-600 hover:underline" onClick={clear}>Clear cart</button>
             <div className="flex items-center gap-3 ml-auto">
               <div className="text-lg font-semibold">Total: ${total.toFixed(2)}</div>
-              <WhatsAppCartButton />
+              <WhatsAppCartButton label="Buy" />
             </div>
           </div>
         </div>
