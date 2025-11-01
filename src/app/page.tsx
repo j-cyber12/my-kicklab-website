@@ -5,6 +5,7 @@ import ProductThumbCarousel from '@/components/ProductThumbCarousel';
 import CartButton from '@/components/CartButton';
 import SaleProductsCarousel from '@/components/SaleProductsCarousel';
 import SearchBar from '@/components/SearchBar';
+import HeelsProductsCarousel from '@/components/HeelsProductsCarousel';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -120,22 +121,14 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
         </section>
       )}
 
-      {/* Heels Collection grid */}
+      {/* Heels Collection - product-style cards in animated marquee */}
       {heels.length > 0 && (
-        <section className="heels-section">
-          <h2>Heels Collection</h2>
-          <div className="heels-grid">
-            {heels.map((p) => (
-              <Link key={p.id} href={`/product/${p.id}`} className="heel-item group">
-                <div className="media">
-                  {/* Using direct img to keep simple and fast */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={(p.thumbnail || p.images?.[0] || '/placeholder.svg') as string} alt={p.name || 'Heels'} />
-                </div>
-                <p>{p.name || 'Elegant Heels'}</p>
-              </Link>
-            ))}
+        <section className="px-4 mt-6">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold">Heels Collection</h2>
           </div>
+          {/* Animated row similar to slippers but with rectangular product cards */}
+          <HeelsProductsCarousel items={heels} />
           <div className="text-center mt-4">
             <Link href="/?category=heels#all" className="view-all-heels">View All Heels</Link>
           </div>
