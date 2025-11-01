@@ -2,7 +2,7 @@ import { getDb } from './mongodb';
 import fs from 'fs';
 import path from 'path';
 import { WithId } from 'mongodb';
-import { applySale, pickSaleForProduct, readSalesSettings, type SaleApplied, type SalesSettings } from './sales';
+import { type SaleApplied } from './sales';
 export type Product = {
   id: string;
   name: string;
@@ -48,7 +48,6 @@ async function ensureIndexes() {
 export async function readProducts(): Promise<PricedProduct[]> {
   if (!hasValidMongoUri()) {
     const seed = readSeedProducts();
-    const settings = {} as SalesSettings;
     return seed.map((p) => {
       const base = p.price;
       const manual = p.onSale && Number(p.salePrice) > 0 && Number(p.salePrice) < base
@@ -57,16 +56,14 @@ export async function readProducts(): Promise<PricedProduct[]> {
       if (manual) {
         return { ...p, originalPrice: base, price: Number(p.salePrice), sale: manual } as PricedProduct;
       }
-      const applied = pickSaleForProduct(p, settings);
-      const { finalPrice } = applySale(base, applied);
-      return { ...p, originalPrice: base, price: finalPrice, sale: applied } as PricedProduct;
+      // No global/category/flash discounts; use base price
+      return { ...p, originalPrice: base, price: base, sale: null } as PricedProduct;
     });
   }
   await ensureIndexes();
   const db = await getDb();
   const col = db.collection<WithId<Product>>(COLLECTION);
   const docs = await col.find({}).sort({ name: 1 }).toArray();
-  const settings = await readSalesSettings();
   const seed = readSeedProducts();
   return docs.map((d) => {
     const { _id: _mongoId, ...rest } = d;
@@ -86,9 +83,8 @@ export async function readProducts(): Promise<PricedProduct[]> {
       const finalPrice = Number(merged.salePrice);
       return { ...merged, originalPrice: base, price: finalPrice, sale: manual } as PricedProduct;
     }
-    const applied = pickSaleForProduct(merged as Product, settings);
-    const { finalPrice } = applySale(base, applied);
-    return { ...merged, originalPrice: base, price: finalPrice, sale: applied } as PricedProduct;
+    // No global/category/flash discounts; use base price
+    return { ...merged, originalPrice: base, price: base, sale: null } as PricedProduct;
   });
 }
 // For compatibility; iterates and upserts items by id
@@ -103,7 +99,6 @@ export async function writeProducts(products: Product[]) {
 export async function getProduct(id: string): Promise<PricedProduct | null> {
   if (!hasValidMongoUri()) {
     const seed = readSeedProducts();
-    const settings = {} as SalesSettings;
     const found = seed.find((p) => p.id === id);
     if (!found) return null;
     const base = found.price;
@@ -113,9 +108,8 @@ export async function getProduct(id: string): Promise<PricedProduct | null> {
     if (manual) {
       return { ...found, originalPrice: base, price: Number(found.salePrice), sale: manual } as PricedProduct;
     }
-    const applied = pickSaleForProduct(found, settings);
-    const { finalPrice } = applySale(base, applied);
-    return { ...found, originalPrice: base, price: finalPrice, sale: applied } as PricedProduct;
+    // No global/category/flash discounts; use base price
+    return { ...found, originalPrice: base, price: base, sale: null } as PricedProduct;
   }
   await ensureIndexes();
   const db = await getDb();
@@ -140,10 +134,8 @@ export async function getProduct(id: string): Promise<PricedProduct | null> {
     const finalPrice = Number(merged.salePrice);
     return { ...merged, originalPrice: base, price: finalPrice, sale: manual } as PricedProduct;
   }
-  const settings = await readSalesSettings();
-  const applied = pickSaleForProduct(merged as Product, settings);
-  const { finalPrice } = applySale(base, applied);
-  return { ...merged, originalPrice: base, price: finalPrice, sale: applied } as PricedProduct;
+  // No global/category/flash discounts; use base price
+  return { ...merged, originalPrice: base, price: base, sale: null } as PricedProduct;
 }
 export async function upsertProduct(product: Product) {
   await ensureIndexes();

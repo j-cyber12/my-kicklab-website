@@ -1,6 +1,5 @@
 ﻿import Link from 'next/link';
 import { readProducts, type PricedProduct } from '@/lib/products';
-import { readSalesSettings, type SalesSettings } from '@/lib/sales';
 import ProductThumbCarousel from '@/components/ProductThumbCarousel';
 import CartButton from '@/components/CartButton';
 import SaleProductsCarousel from '@/components/SaleProductsCarousel';
@@ -21,7 +20,6 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
   const saleOnly = saleParam === '1' || saleParam === 'true';
 
   const products: PricedProduct[] = await readProducts();
-  const sales: SalesSettings = await readSalesSettings();
   const qLower = q.trim().toLowerCase();
   const matchesText = (p: PricedProduct) => !qLower || p.name.toLowerCase().includes(qLower) || (p.description || '').toLowerCase().includes(qLower);
   const filtered = products.filter((p) => (!genderFilter || p.gender === genderFilter)
@@ -74,7 +72,7 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
       </section>
 
       {/* Active sale banner */}
-      {(() => {
+      {/* (() => {
         const now = Date.now();
         const parts: string[] = [];
         function active(win?: { enabled?: boolean; percent?: number; startAt?: string; endAt?: string }) {
@@ -105,7 +103,7 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
             </div>
           </section>
         );
-      })()}
+      })()*/}
 
       
       {/* Slippers animated carousel */}
