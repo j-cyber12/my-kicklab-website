@@ -67,6 +67,11 @@ export default function WhatsAppCartButton({ label = "Proceed to checkout", clas
     } else if (phone && /^\+?\d{7,}$/.test(phone)) {
       httpsUrl = `https://wa.me/${phone.replace(/^\+/, "")}?text=${encoded}`;
     } else {
+      if (process.env.NODE_ENV !== "production") {
+        // Help developers notice missing config during development
+        // eslint-disable-next-line no-console
+        console.warn("WhatsApp phone/link not configured. Falling back to share sheet (wa.me/?text=…)");
+      }
       httpsUrl = `https://wa.me/?text=${encoded}`;
     }
 
