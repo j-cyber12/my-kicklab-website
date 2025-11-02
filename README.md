@@ -38,14 +38,14 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ## WhatsApp Ordering
 
 - Set `NEXT_PUBLIC_WHATSAPP_LINK` in `.env.local` to a WhatsApp Business short link (e.g. `https://wa.me/message/ZC23PRNRWILSN1`) to open chats directly to your WhatsApp with a prefilled cart or product summary.
-- Alternatively, set `NEXT_PUBLIC_WHATSAPP_PHONE` (e.g. `+254712345678`) to use `https://wa.me/<phone>?text=...`. If neither is set, the app falls back to `https://wa.me/?text=...` which prompts the user to pick a contact.
+- Additionally, set `NEXT_PUBLIC_WHATSAPP_PHONE` (e.g. `+254712345678`) to enable a native deep link on mobile (`whatsapp://send?phone=...&text=...`) which is more reliable in in-app browsers (Facebook/Instagram) and some devices. If neither is set, the app falls back to `https://wa.me/?text=...` which prompts the user to pick a contact.
 - Note: WhatsApp links cannot auto-attach images. The message includes each product’s image URL for quick reference.
 
 ## Deploying on Render
 
 - Environment variables from `.env.local` are not present on Render unless you add them in the Render dashboard. In production, Next.js bakes `NEXT_PUBLIC_*` variables at build time.
-- In your Render service, go to Settings → Environment → Environment Variables and add either of:
+- In your Render service, go to Settings → Environment → Environment Variables and add:
   - `NEXT_PUBLIC_WHATSAPP_LINK` set to your WhatsApp short link (e.g. `https://wa.me/message/…`).
-  - or `NEXT_PUBLIC_WHATSAPP_PHONE` set to your phone in E.164 format (e.g. `+254712345678`).
+  - `NEXT_PUBLIC_WHATSAPP_PHONE` set to your phone in E.164 format (e.g. `+254712345678`) for better mobile reliability.
 - Trigger a redeploy after saving the variables so the build picks them up.
 - Tip: You can use `.env.example` as a reference for all required variables.

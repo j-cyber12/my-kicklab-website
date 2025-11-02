@@ -82,15 +82,15 @@ export default function WhatsAppCartButton({ label = "Proceed to checkout", clas
       const nav = navigator as Navigator & { userAgentData?: { mobile?: boolean } };
       const isMobile = nav.userAgentData?.mobile === true || /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(nav.userAgent || "");
       if (isMobile) {
-        if (!customLink) {
-          if (phone && /^\+?\d{7,}$/.test(phone)) {
-            mobileUrl = `whatsapp://send?phone=${phone.replace(/^\+/, "")}&text=${encoded}`;
-          } else {
-            mobileUrl = `whatsapp://send?text=${encoded}`;
-          }
-        } else {
+        // Prefer phone-based deep link on mobile for reliability
+        if (phone && /^\+?\d{7,}$/.test(phone)) {
+          mobileUrl = `whatsapp://send?phone=${phone.replace(/^\+/, "")}&text=${encoded}`;
+        } else if (customLink) {
           // No whatsapp:// equivalent for wa.me/message short codes; use https
           mobileUrl = httpsUrl;
+        } else {
+          // Last resort: share sheet
+          mobileUrl = `whatsapp://send?text=${encoded}`;
         }
       }
     } catch {
