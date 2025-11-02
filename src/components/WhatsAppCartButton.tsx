@@ -44,11 +44,11 @@ export default function WhatsAppCartButton({ label = "Proceed to checkout", clas
     const lines: string[] = [];
     lines.push("Hello! I'd like to order:");
     for (const it of list) {
-      const line = `• ${it.name} x${it.qty} — $${Number(it.price).toFixed(2)} each`;
-      lines.push(line);
+      lines.push(`• ${it.name} x${it.qty} — $${Number(it.price).toFixed(2)} each`);
+      if (it.imageUrl) lines.push(`  Photo: ${it.imageUrl}`);
     }
     const total = list.reduce((sum, it) => sum + Number(it.price) * Number(it.qty), 0);
-    lines.push("—");
+    lines.push("");
     lines.push(`Total: $${total.toFixed(2)}`);
     return lines.join("\n");
   }, [items, prefill]);
@@ -57,10 +57,48 @@ export default function WhatsAppCartButton({ label = "Proceed to checkout", clas
     if (!message) return;
     const encoded = encodeURIComponent(message);
     const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE;
-    const url = phone && /^\+?\d{7,}$/.test(phone)
-      ? `https://wa.me/${phone.replace(/^\+/, "")}?text=${encoded}`
-      : `https://wa.me/?text=${encoded}`;
-    try { window.open(url, "_blank", "noreferrer"); } catch { window.location.href = url; }
+    const customLink = process.env.NEXT_PUBLIC_WHATSAPP_LINK?.trim();
+
+    // Build HTTPS fallback (works on desktop and mobile)
+    let httpsUrl: string;
+    if (customLink) {
+      const sep = customLink.includes("?") ? "&" : "?";
+      httpsUrl = `${customLink}${sep}text=${encoded}`;
+    } else if (phone && /^\+?\d{7,}$/.test(phone)) {
+      httpsUrl = `https://wa.me/${phone.replace(/^\+/, "")}?text=${encoded}`;
+    } else {
+      httpsUrl = `https://wa.me/?text=${encoded}`;
+    }
+
+    // Build native mobile deep link when possible
+    let mobileUrl: string | null = null;
+    try {
+      const isMobile = (navigator as any)?.userAgentData?.mobile === true || /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent || "");
+      if (isMobile) {
+        if (!customLink) {
+          if (phone && /^\+?\d{7,}$/.test(phone)) {
+            mobileUrl = `whatsapp://send?phone=${phone.replace(/^\+/, "")}&text=${encoded}`;
+          } else {
+            mobileUrl = `whatsapp://send?text=${encoded}`;
+          }
+        } else {
+          // No whatsapp:// equivalent for wa.me/message short codes; use https
+          mobileUrl = httpsUrl;
+        }
+      }
+    } catch {
+      // ignore UA parsing issues
+    }
+
+    try {
+      if (mobileUrl) {
+        window.location.href = mobileUrl;
+      } else {
+        window.open(httpsUrl, "_blank", "noreferrer");
+      }
+    } catch {
+      window.location.href = httpsUrl;
+    }
   }, [message]);
 
   return (
@@ -75,3 +113,4 @@ export default function WhatsAppCartButton({ label = "Proceed to checkout", clas
     </button>
   );
 }
+

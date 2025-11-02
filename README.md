@@ -37,4 +37,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## WhatsApp Ordering
 
-- Set `NEXT_PUBLIC_WHATSAPP_PHONE` in `.env.local` (e.g. `+254712345678`) to open chats directly to your number with a prefilled cart summary. If unset, the app falls back to `https://wa.me/?text=...` which prompts the user to pick a contact.
+- Set `NEXT_PUBLIC_WHATSAPP_LINK` in `.env.local` to a WhatsApp Business short link (e.g. `https://wa.me/message/ZC23PRNRWILSN1`) to open chats directly to your WhatsApp with a prefilled cart or product summary.
+- Alternatively, set `NEXT_PUBLIC_WHATSAPP_PHONE` (e.g. `+254712345678`) to use `https://wa.me/<phone>?text=...`. If neither is set, the app falls back to `https://wa.me/?text=...` which prompts the user to pick a contact.
+- Note: WhatsApp links cannot auto-attach images. The message includes each product’s image URL for quick reference.
