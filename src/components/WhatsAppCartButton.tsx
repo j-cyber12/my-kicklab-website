@@ -73,7 +73,8 @@ export default function WhatsAppCartButton({ label = "Proceed to checkout", clas
     // Build native mobile deep link when possible
     let mobileUrl: string | null = null;
     try {
-      const isMobile = (navigator as any)?.userAgentData?.mobile === true || /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent || "");
+      const nav = navigator as Navigator & { userAgentData?: { mobile?: boolean } };
+      const isMobile = nav.userAgentData?.mobile === true || /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(nav.userAgent || "");
       if (isMobile) {
         if (!customLink) {
           if (phone && /^\+?\d{7,}$/.test(phone)) {
@@ -113,4 +114,3 @@ export default function WhatsAppCartButton({ label = "Proceed to checkout", clas
     </button>
   );
 }
-
