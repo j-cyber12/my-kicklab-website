@@ -57,7 +57,8 @@ export default function WhatsAppCartButton({ label = "Proceed to checkout", clas
     if (!message) return;
     const encoded = encodeURIComponent(message);
     const phone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE;
-    const customLink = process.env.NEXT_PUBLIC_WHATSAPP_LINK?.trim();
+    // Ensure a reliable fallback to your shop link in production
+    const customLink = (process.env.NEXT_PUBLIC_WHATSAPP_LINK || "https://wa.me/message/ZC23PRNRWILSN1").trim();
 
     // Build HTTPS fallback (works on desktop and mobile)
     let httpsUrl: string;
