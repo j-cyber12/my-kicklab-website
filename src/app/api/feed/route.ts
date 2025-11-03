@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { readProducts } from '@/lib/products';
+import { sanitizeText, toCsv, buildAbsoluteUrl } from '@/lib/feed/csv';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -18,53 +19,46 @@ function ensureAbsolute(url: string): string {
   return `https://luvre.onrender.com${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const url = new URL(req.url);
+    const SITE_URL = process.env.SITE_URL || `${url.protocol}//${url.host}`;
+    const CURRENCY = (process.env.CURRENCY || 'USD').toUpperCase();
+    const FALLBACK_IMAGE = process.env.FALLBACK_IMAGE || '';
+
     const products = await readProducts();
 
-    const header = [
-      'id',
-      'title',
-      'description',
-      'availability',
-      'condition',
-      'price',
-      'link',
-      'image_link',
-    ].join(',');
+    const header = ['id', 'title', 'description', 'availability', 'condition', 'price', 'link', 'image_link'];
+    const rows: string[][] = [header];
 
-    const rows = products.map((p) => {
-      const id = p.id;
-      const title = p.name;
-      const description = p.description || '';
+    for (const p of products) {
+      const id = String((p as any).id ?? (p as any)._id ?? '');
+      const title = sanitizeText((p as any).name ?? '', 150);
+      const description = sanitizeText((p as any).description ?? '', 5000);
       const availability = 'in stock';
       const condition = 'new';
-      const price = `${Number(p.price).toFixed(2)} USD`;
-      const link = `https://luvre.onrender.com/product/${encodeURIComponent(p.id)}`;
-      const image = ensureAbsolute((Array.isArray(p.images) && p.images[0]) || p.thumbnail || '');
+      const priceNum = Number((p as any).price ?? 0);
+      const price = `${priceNum.toFixed(2)} ${CURRENCY}`;
+      const link = buildAbsoluteUrl(SITE_URL, `/product/${encodeURIComponent(id)}`);
+      const img0 = (Array.isArray((p as any).images) && (p as any).images[0])
+        ? (p as any).images[0]
+        : ((p as any).thumbnail ?? FALLBACK_IMAGE);
+      const image_link = buildAbsoluteUrl(SITE_URL, img0 || '/images/placeholder.jpg');
 
-      return [
-        csvEscape(id),
-        csvEscape(title),
-        csvEscape(description),
-        csvEscape(availability),
-        csvEscape(condition),
-        csvEscape(price),
-        csvEscape(link),
-        csvEscape(image),
-      ].join(',');
-    });
+      rows.push([id, title, description, availability, condition, price, link, image_link]);
+    }
 
-    const csv = [header, ...rows].join('\n');
+    const csv = toCsv(rows);
     return new NextResponse(csv, {
       status: 200,
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="feed.csv"',
+        'Cache-Control': 'public, max-age=300',
       },
     });
   } catch (err) {
     console.error('GET /api/feed failed', err);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
-
