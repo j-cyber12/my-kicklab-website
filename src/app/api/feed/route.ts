@@ -37,7 +37,7 @@ export async function GET(req: Request) {
       status: 200,
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': 'attachment; filename="feed.csv"',
+        'Content-Disposition': 'inline; filename="feed.csv"',
         'Cache-Control': 'public, max-age=300',
       },
     });
