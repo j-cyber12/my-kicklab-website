@@ -1,4 +1,4 @@
-export function sanitizeText(input: any, max = 5000) {
+export function sanitizeText(input: unknown, max = 5000) {
   const s = String(input ?? '')
     .replace(/<[^>]+>/g, ' ') // strip HTML
     .replace(/\s+/g, ' ') // collapse spaces
@@ -28,4 +28,3 @@ export function toCsv(rows: string[][]) {
 export function toCsvRow(fields: string[]) {
   return fields.map(csvEscape).join(',');
 }
-
