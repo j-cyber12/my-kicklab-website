@@ -110,6 +110,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/api/feed/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/feed">> = Specific
+  const handler = {} as typeof import("../../src/app/api/feed/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/api/health/cloudinary/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/health/cloudinary">> = Specific
@@ -177,6 +186,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/uploads/[...path]">> = Specific
   const handler = {} as typeof import("../../src/app/api/uploads/[...path]/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/feed.csv/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/feed.csv">> = Specific
+  const handler = {} as typeof import("../../src/app/feed.csv/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
