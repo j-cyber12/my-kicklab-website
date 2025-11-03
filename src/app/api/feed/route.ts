@@ -11,6 +11,7 @@ export async function GET(req: Request) {
     const SITE_URL = process.env.SITE_URL || `${url.protocol}//${url.host}`;
     const CURRENCY = (process.env.CURRENCY || 'USD').toUpperCase();
     const FALLBACK_IMAGE = process.env.FALLBACK_IMAGE || '';
+    const asText = url.searchParams.get('view') === '1' || url.searchParams.get('format') === 'txt';
 
     const products: PricedProduct[] = await readProducts();
 
@@ -36,7 +37,7 @@ export async function GET(req: Request) {
     return new NextResponse(csv, {
       status: 200,
       headers: {
-        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Type': asText ? 'text/plain; charset=utf-8' : 'text/csv; charset=utf-8',
         'Content-Disposition': 'inline; filename="feed.csv"',
         'Cache-Control': 'public, max-age=300',
       },
