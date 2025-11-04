@@ -14,7 +14,7 @@ export async function GET(req: Request) {
 
     const products: PricedProduct[] = await readProducts();
 
-    const header = ['id', 'title', 'image_link', 'link'];
+    const header = ['id', 'title', 'image_link', 'link', 'price'];
     const rows: string[][] = [header];
 
     for (const p of products) {
@@ -23,8 +23,9 @@ export async function GET(req: Request) {
       const link = buildAbsoluteUrl(SITE_URL, `/product/${encodeURIComponent(id)}`);
       const img0 = (Array.isArray(p.images) && p.images[0]) ? p.images[0] : (p.thumbnail ?? FALLBACK_IMAGE);
       const image_link = buildAbsoluteUrl(SITE_URL, img0 || '/images/placeholder.jpg');
+      const price = String(p.price) + ' USD';
 
-      rows.push([id, title, image_link, link]);
+      rows.push([id, title, image_link, link, price]);
     }
 
     const csv = toCsv(rows);
@@ -41,6 +42,8 @@ export async function GET(req: Request) {
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
+
+
 
 
 
