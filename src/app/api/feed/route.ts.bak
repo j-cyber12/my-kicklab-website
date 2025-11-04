@@ -9,22 +9,28 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const SITE_URL = process.env.SITE_URL || `${url.protocol}//${url.host}`;
-        const FALLBACK_IMAGE = process.env.FALLBACK_IMAGE || '';
+    const CURRENCY = (process.env.CURRENCY || 'USD').toUpperCase();
+    const FALLBACK_IMAGE = process.env.FALLBACK_IMAGE || '';
     const viewInlineText = url.searchParams.get('view') === '1' || url.searchParams.get('format') === 'txt';
 
     const products: PricedProduct[] = await readProducts();
 
-    const header = ['id', 'title', 'image_link', 'link'];
+    const header = ['id', 'title', 'description', 'availability', 'condition', 'price', 'link', 'image_link'];
     const rows: string[][] = [header];
 
     for (const p of products) {
       const id = String(p.id);
       const title = sanitizeText(p.name ?? '', 150);
+      const description = sanitizeText(p.description ?? '', 5000);
+      const availability = 'in stock';
+      const condition = 'new';
+      const priceNum = Number(p.price ?? 0);
+      const price = `${priceNum.toFixed(2)} ${CURRENCY}`;
       const link = buildAbsoluteUrl(SITE_URL, `/product/${encodeURIComponent(id)}`);
       const img0 = (Array.isArray(p.images) && p.images[0]) ? p.images[0] : (p.thumbnail ?? FALLBACK_IMAGE);
       const image_link = buildAbsoluteUrl(SITE_URL, img0 || '/images/placeholder.jpg');
 
-      rows.push([id, title, image_link, link]);
+      rows.push([id, title, description, availability, condition, price, link, image_link]);
     }
 
     const csv = toCsv(rows);
@@ -41,6 +47,4 @@ export async function GET(req: Request) {
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
-
-
 
