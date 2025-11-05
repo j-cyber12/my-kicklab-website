@@ -14,17 +14,18 @@ export async function GET(req: Request) {
 
     const products: PricedProduct[] = await readProducts();
 
-    const header = ['id', 'title', 'image_link', 'link'];
+    const header = ['id', 'title', 'image_link', 'price', 'link'];
     const rows: string[][] = [header];
 
     for (const p of products) {
-      const id = String(p.id);
+      const rawId = (p as any)._id ?? p.id;
+      const id = String(rawId);
       const title = sanitizeText(p.name ?? '', 150);
-      const link = `${SITE_URL}/product/${encodeURIComponent(id)}`;
       const img0 = (Array.isArray(p.images) && p.images[0]) ? p.images[0] : (p.thumbnail ?? FALLBACK_IMAGE);
       const image_link = buildAbsoluteUrl(SITE_URL, img0 || '/images/placeholder.jpg');
-
-      rows.push([id, title, image_link, link]);
+      const price = String(p.price) + ' USD';
+      const link = `${SITE_URL}/product/${encodeURIComponent(id)}`;
+      rows.push([id, title, image_link, price, link]);
     }
 
     const csv = toCsv(rows);
@@ -41,6 +42,10 @@ export async function GET(req: Request) {
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
+
+
+
+
 
 
 
