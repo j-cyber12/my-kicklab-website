@@ -20,11 +20,11 @@ export async function GET(req: Request) {
     for (const p of products) {
       const rawId = (p as any)._id ?? p.id;
       const id = String(rawId);
-      const title = sanitizeText(p.name ?? '', 150);
+      const title = sanitizeText(p.name ?? '', 150) || 'Untitled';
       const img0 = (Array.isArray(p.images) && p.images[0]) ? p.images[0] : (p.thumbnail ?? FALLBACK_IMAGE);
       const image_link = buildAbsoluteUrl(SITE_URL, img0 || '/images/placeholder.jpg');
-      const price = String(p.price) + ' USD';
-      const link = `${SITE_URL}/product/${encodeURIComponent(id)}`;
+      const price = `${Number(p.price ?? 0).toFixed(2)} USD`;
+      const link = `${SITE_URL}/product/${encodeURIComponent(String((p as any)._id ?? id))}`;
       rows.push([id, title, image_link, price, link]);
     }
 
@@ -42,6 +42,9 @@ export async function GET(req: Request) {
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
+
+
+
 
 
 
