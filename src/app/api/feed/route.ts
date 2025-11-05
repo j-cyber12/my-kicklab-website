@@ -17,14 +17,13 @@ export async function GET(req: Request) {
     const header = ['id', 'title', 'image_link', 'price', 'link'];
     const rows: string[][] = [header];
 
-    for (const p of products) {
-      const rawId = (p as any)._id ?? p.id;
-      const id = String(rawId);
+    for (const p of products) {      const mongoLike = p as unknown as { _id?: { toString(): string } };
+      const id = mongoLike._id?.toString?.() || String(p.id);
       const title = sanitizeText(p.name ?? '', 150) || 'Untitled';
       const img0 = (Array.isArray(p.images) && p.images[0]) ? p.images[0] : (p.thumbnail ?? FALLBACK_IMAGE);
       const image_link = buildAbsoluteUrl(SITE_URL, img0 || '/images/placeholder.jpg');
       const price = `${Number(p.price ?? 0).toFixed(2)} USD`;
-      const link = `${SITE_URL}/product/${encodeURIComponent(String((p as any)._id ?? id))}`;
+      const link = `${SITE_URL}/product/${encodeURIComponent(id)}`;
       rows.push([id, title, image_link, price, link]);
     }
 
@@ -42,6 +41,7 @@ export async function GET(req: Request) {
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
+
 
 
 
