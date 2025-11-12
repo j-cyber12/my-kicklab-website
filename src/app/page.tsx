@@ -5,6 +5,8 @@ import CartButton from '@/components/CartButton';
 import SaleProductsCarousel from '@/components/SaleProductsCarousel';
 import SearchBar from '@/components/SearchBar';
 import HeelsProductsCarousel from '@/components/HeelsProductsCarousel';
+import HeroBackground from '@/components/HeroBackground';
+import styles from './page.module.css';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -38,31 +40,16 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
 
       {/* Hero banner */}
       <section className="px-4 pb-4" style={{ paddingTop: 'max(env(safe-area-inset-top), 1rem)' }}>
-        <div
-          className="rounded-2xl overflow-hidden relative text-white p-8 sm:p-12 md:p-16"
-          style={{
-            background:
-              'radial-gradient(80% 60% at 70% 10%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%), linear-gradient(180deg, #2a174b 0%, #1b1033 100%)',
-          }}
-        >
-          <div className="absolute inset-0 pointer-events-none opacity-20" style={{backgroundImage:'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.15) 50%, rgba(255,255,255,0) 100%)'}} />
-          <div className="relative min-h-[46vh] md:min-h-[60vh] grid place-items-center text-center">
-            <div>
-              <div style={{ fontFamily: 'var(--font-playfair)' }} className="font-black tracking-wide">
-                <h1 className="text-4xl sm:text-5xl md:text-7xl leading-none">Luvre</h1>
-              </div>
-              <p className="mt-4 text-xs sm:text-sm tracking-[0.35em] uppercase opacity-90">Walk With Elegance</p>
-              <div className="mt-6">
-                <Link href="/?sale=1#all" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-zinc-900 font-medium shadow-sm hover:shadow transition">
-                  View All
-                </Link>
-              </div>
-              <div className="mt-5 hidden sm:block px-4">
+        <div className={`${styles.heroWrapper} rounded-2xl overflow-hidden`}>
+          <HeroBackground />
+          <div className={styles.heroContent}>
+            <div className={styles.heroBody}>
+              <h1 className={`${styles.heroTitle} font-black`}>Luvré</h1>
+              <div className={styles.heroSearch}>
                 <SearchBar initialQuery={q} initialCategory={categoryFilter || ''} variant="desktop" />
               </div>
             </div>
           </div>
-          <div className="absolute -bottom-12 -right-12 w-56 h-56 bg-white/10 rounded-full blur-2xl" />
         </div>
       </section>
 

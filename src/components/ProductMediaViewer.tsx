@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "@/lib/products";
 import { cld } from "@/lib/images";
@@ -19,8 +20,6 @@ export default function ProductMediaViewer({ product }: Props) {
   const [hovering, setHovering] = useState(false);
   const [origin, setOrigin] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
   const mainRef = useRef<HTMLDivElement | null>(null);
-
-  const thumbs = useMemo(() => images.slice(0, Math.min(4, images.length)), [images]);
 
   const mainSrc = cld(images[idx] || images[0], "detail");
 
@@ -57,84 +56,78 @@ export default function ProductMediaViewer({ product }: Props) {
         <div className="flex-1 flex justify-center">
           <div
             ref={mainRef}
-            className="relative mx-auto w-full max-w-[560px] md:max-w-[640px] rounded-3xl border border-token overflow-hidden bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-950 dark:to-black shadow-xl"
+            className="relative mx-auto w-full max-w-[640px] rounded-3xl border border-token overflow-hidden bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-950 dark:to-black shadow-xl"
             onMouseEnter={() => setHovering(true)}
             onMouseLeave={() => setHovering(false)}
             onMouseMove={onMouseMove}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={mainSrc}
               alt={product.name}
-              className="w-full h-auto object-contain aspect-square md:aspect-[4/5] transition-transform duration-300 cursor-zoom-in"
-              style={{ transformOrigin: `${origin.x}% ${origin.y}%`, transform: hovering ? "scale(1.06)" : "scale(1)" }}
+              width={800}
+              height={800}
+              sizes="(max-width: 768px) 90vw, 800px"
+              className="w-full h-auto object-contain aspect-square md:aspect-[3/4] transition-transform duration-300 cursor-zoom-in"
+              style={{ transformOrigin: `${origin.x}% ${origin.y}%`, transform: hovering ? "scale(1.05)" : "scale(1)" }}
               onClick={() => setLightbox(true)}
             />
-            {/* Arrow buttons removed per request */}
           </div>
         </div>
-        {/* Right-side rail removed; thumbnails moved below the main image */}
       </div>
 
       {images.length > 1 && (
-        <div className="mt-3">
-          {/* Desktop/tablet: 4-up grid below main image */}
-          <div className="hidden md:grid grid-cols-4 gap-3">
-            {thumbs.map((img, i) => {
+        <div className="mt-6">
+          <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory py-2">
+            {images.map((img, i) => {
               const src = cld(img, "gallery");
               const isActive = i === idx;
               return (
                 <button
                   key={i}
                   type="button"
-                  onClick={() => {
-                    if (images.length > 4 && i === thumbs.length - 1) {
-                      setIdx(i);
-                      setLightbox(true);
-                    } else {
-                      setIdx(i);
-                    }
-                  }}
-                  className={`group relative rounded-xl overflow-hidden border transition will-change-transform ${
-                    isActive ? "border-indigo-600 dark:border-violet-400 shadow-sm" : "border-token hover:border-zinc-400 dark:hover:border-zinc-500"
+                  onClick={() => setIdx(i)}
+                  className={`snap-center shrink-0 rounded-2xl overflow-hidden border transition ${
+                    isActive ? "border-white shadow-lg" : "border-transparent hover:border-white/60"
                   }`}
                   aria-label={`View image ${i + 1}`}
                 >
-                  <img src={src} alt={`${product.name} thumbnail ${i + 1}`} className="w-full h-24 object-cover transition-transform duration-200 group-hover:scale-[1.06]" />
-                  {images.length > 4 && i === thumbs.length - 1 && (
-                    <span className="absolute inset-0 bg-black/40 text-white text-sm font-medium flex items-center justify-center">+{images.length - 4}</span>
-                  )}
+                  <Image
+                    src={src}
+                    alt={`${product.name} photo ${i + 1}`}
+                    width={320}
+                    height={320}
+                    className="w-[280px] h-[360px] object-cover transition duration-200"
+                  />
                 </button>
               );
             })}
           </div>
+        </div>
+      )}
 
-          {/* Mobile: horizontal row */}
-          <div className="flex md:hidden gap-3 overflow-x-auto py-1">
-            {thumbs.map((img, i) => {
+      {images.length > 1 && (
+        <div className="mt-6">
+          <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory py-2">
+            {images.map((img, i) => {
               const src = cld(img, "gallery");
               const isActive = i === idx;
               return (
                 <button
                   key={i}
                   type="button"
-                  onClick={() => {
-                    if (images.length > 4 && i === thumbs.length - 1) {
-                      setIdx(i);
-                      setLightbox(true);
-                    } else {
-                      setIdx(i);
-                    }
-                  }}
-                  className={`group relative rounded-xl overflow-hidden border transition will-change-transform ${
-                    isActive ? "border-indigo-600 dark:border-violet-400 shadow-sm" : "border-token hover:border-zinc-400 dark:hover:border-zinc-500"
+                  onClick={() => setIdx(i)}
+                  className={`snap-center shrink-0 rounded-2xl overflow-hidden border transition ${
+                    isActive ? "border-white shadow-lg" : "border-transparent hover:border-white/60"
                   }`}
                   aria-label={`View image ${i + 1}`}
                 >
-                  <img src={src} alt={`${product.name} thumbnail ${i + 1}`} className="w-[88px] h-[88px] object-cover transition-transform duration-200 group-hover:scale-[1.06]" />
-                  {images.length > 4 && i === thumbs.length - 1 && (
-                    <span className="absolute inset-0 bg-black/40 text-white text-sm font-medium flex items-center justify-center">+{images.length - 4}</span>
-                  )}
+                  <Image
+                    src={src}
+                    alt={`${product.name} photo ${i + 1}`}
+                    width={320}
+                    height={320}
+                    className="w-[280px] h-[360px] object-cover transition duration-200"
+                  />
                 </button>
               );
             })}
@@ -153,10 +146,11 @@ export default function ProductMediaViewer({ product }: Props) {
             className="relative max-w-5xl w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={cld(images[idx] || images[0], "detail")}
               alt={product.name}
+              width={1200}
+              height={1200}
               className="w-full h-auto object-contain rounded-2xl shadow-2xl"
             />
             <button

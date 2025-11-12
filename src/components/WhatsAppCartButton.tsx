@@ -8,9 +8,10 @@ type Props = {
   label?: string;
   className?: string;
   prefill?: Item; // optionally include this item in the message without mutating cart
+  note?: string; // optional extra note appended to the message (e.g., payment method)
 };
 
-export default function WhatsAppCartButton({ label = "Proceed to checkout", className, prefill }: Props) {
+export default function WhatsAppCartButton({ label = "Proceed to checkout", className, prefill, note }: Props) {
   const [items, setItems] = useState<Item[]>([]);
 
   useEffect(() => {
@@ -44,14 +45,23 @@ export default function WhatsAppCartButton({ label = "Proceed to checkout", clas
     const lines: string[] = [];
     lines.push("Hello! I'd like to order:");
     for (const it of list) {
-      lines.push(`• ${it.name} x${it.qty} — $${Number(it.price).toFixed(2)} each`);
+      const priceEach = Number(it.price);
+      lines.push(`• ${it.name} x${it.qty} — $${priceEach.toFixed(2)} each`);
       if (it.imageUrl) lines.push(`  Photo: ${it.imageUrl}`);
+    }
+    let extraNote = note;
+    try {
+      if (!extraNote) extraNote = window.localStorage.getItem("preferredPaymentMethod") || undefined;
+    } catch {}
+    if (extraNote && extraNote.trim()) {
+      lines.push("");
+      lines.push(`Preference: ${extraNote.trim()}`);
     }
     const total = list.reduce((sum, it) => sum + Number(it.price) * Number(it.qty), 0);
     lines.push("");
     lines.push(`Total: $${total.toFixed(2)}`);
     return lines.join("\n");
-  }, [items, prefill]);
+  }, [items, prefill, note]);
 
   const onClick = useCallback(() => {
     if (!message) return;
@@ -70,8 +80,7 @@ export default function WhatsAppCartButton({ label = "Proceed to checkout", clas
     } else {
       if (process.env.NODE_ENV !== "production") {
         // Help developers notice missing config during development
-        // eslint-disable-next-line no-console
-        console.warn("WhatsApp phone/link not configured. Falling back to share sheet (wa.me/?text=…)");
+        console.warn("WhatsApp phone/link not configured. Falling back to share sheet (wa.me/?text=...)");
       }
       httpsUrl = `https://wa.me/?text=${encoded}`;
     }

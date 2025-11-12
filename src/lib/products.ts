@@ -1,4 +1,4 @@
-import { getDb } from './mongodb';
+﻿import { getDb } from './mongodb';
 import fs from 'fs';
 import path from 'path';
 import { WithId } from 'mongodb';
@@ -22,11 +22,12 @@ export type PricedProduct = Product & { originalPrice: number; sale?: SaleApplie
 
 const COLLECTION = 'products';
 
-
 function hasValidMongoUri() {
   const uri = process.env.MONGODB_URI || '';
   return /^mongodb(\+srv)?:\/\//.test(uri);
 }
+
+const shouldUseSeedData = () => process.env.NODE_ENV !== 'production' || !hasValidMongoUri();
 
 function readSeedProducts(): Product[] {
   try {
@@ -45,47 +46,61 @@ async function ensureIndexes() {
   await col.createIndex({ id: 1 }, { unique: true, name: 'uniq_id' });
 }
 
+function defaultSizesFor(p: Partial<Product>): string[] {
+  const cat = (p.category || '').toLowerCase();
+  if (cat === 'heels' || cat === 'shoes' || cat === 'slippers') {
+    return ['6', '7', '8', '9', '10'];
+  }
+  return ['One Size'];
+}
+
 export async function readProducts(): Promise<PricedProduct[]> {
-  if (!hasValidMongoUri()) {
+  const toPriced = (list: Product[]): PricedProduct[] => list.map((p) => {
+    const base = p.price;
+    const manual = p.onSale && Number(p.salePrice) > 0 && Number(p.salePrice) < base
+      ? { type: 'manual', percent: Math.round((1 - Number(p.salePrice) / base) * 100) as number }
+      : null;
+    if (manual) return { ...p, originalPrice: base, price: Number(p.salePrice), sale: manual } as PricedProduct;
+    return { ...p, originalPrice: base, price: base, sale: null } as PricedProduct;
+  });
+
+  if (shouldUseSeedData()) {
+    return toPriced(readSeedProducts());
+  }
+  try {
+    await ensureIndexes();
+    const db = await getDb();
+    const col = db.collection<WithId<Product>>(COLLECTION);
+    const docs = await col.find({}).sort({ name: 1 }).toArray();
     const seed = readSeedProducts();
-    return seed.map((p) => {
-      const base = p.price;
-      const manual = p.onSale && Number(p.salePrice) > 0 && Number(p.salePrice) < base
-        ? { type: 'manual', percent: Math.round((1 - Number(p.salePrice) / base) * 100) as number }
+    return docs.map((d) => {
+      const { _id: _mongoId, ...rest } = d;
+      void _mongoId;
+      const seedItem = seed.find((p) => p.id === (rest as Product).id);
+      const merged: Product = {
+        ...(rest as Product),
+        sizes: (Array.isArray((rest as Product).sizes) && (rest as Product).sizes!.length > 0)
+          ? (rest as Product).sizes
+          : (seedItem?.sizes && seedItem.sizes.length > 0 ? seedItem.sizes : defaultSizesFor(rest as Product))
+      };
+      const base = merged.price;
+      const manual = merged.onSale && Number(merged.salePrice) > 0 && Number(merged.salePrice) < base
+        ? { type: 'manual', percent: Math.round((1 - Number(merged.salePrice) / base) * 100) as number }
         : null;
       if (manual) {
-        return { ...p, originalPrice: base, price: Number(p.salePrice), sale: manual } as PricedProduct;
+        const finalPrice = Number(merged.salePrice);
+        return { ...merged, originalPrice: base, price: finalPrice, sale: manual } as PricedProduct;
       }
-      // No global/category/flash discounts; use base price
-      return { ...p, originalPrice: base, price: base, sale: null } as PricedProduct;
+      return { ...merged, originalPrice: base, price: base, sale: null } as PricedProduct;
     });
+  } catch (err) {
+      if (process.env.NODE_ENV !== 'production') {
+        // Fallback to seed data if DB is unreachable in development
+        console.warn('DB unreachable in readProducts; falling back to seed data:', (err instanceof Error ? err.message : String(err)));
+        return toPriced(readSeedProducts());
+      }
+    throw err;
   }
-  await ensureIndexes();
-  const db = await getDb();
-  const col = db.collection<WithId<Product>>(COLLECTION);
-  const docs = await col.find({}).sort({ name: 1 }).toArray();
-  const seed = readSeedProducts();
-  return docs.map((d) => {
-    const { _id: _mongoId, ...rest } = d;
-    void _mongoId;
-    const seedItem = seed.find((p) => p.id === (rest as Product).id);
-    const merged: Product = {
-      ...(rest as Product),
-      sizes: (Array.isArray((rest as Product).sizes) && (rest as Product).sizes!.length > 0)
-        ? (rest as Product).sizes
-        : (seedItem?.sizes || [])
-    };
-    const base = merged.price;
-    const manual = merged.onSale && Number(merged.salePrice) > 0 && Number(merged.salePrice) < base
-      ? { type: 'manual', percent: Math.round((1 - Number(merged.salePrice) / base) * 100) as number }
-      : null;
-    if (manual) {
-      const finalPrice = Number(merged.salePrice);
-      return { ...merged, originalPrice: base, price: finalPrice, sale: manual } as PricedProduct;
-    }
-    // No global/category/flash discounts; use base price
-    return { ...merged, originalPrice: base, price: base, sale: null } as PricedProduct;
-  });
 }
 // For compatibility; iterates and upserts items by id
 export async function writeProducts(products: Product[]) {
@@ -97,7 +112,7 @@ export async function writeProducts(products: Product[]) {
 }
 
 export async function getProduct(id: string): Promise<PricedProduct | null> {
-  if (!hasValidMongoUri()) {
+  const seedFallback = (): PricedProduct | null => {
     const seed = readSeedProducts();
     const found = seed.find((p) => p.id === id);
     if (!found) return null;
@@ -105,37 +120,45 @@ export async function getProduct(id: string): Promise<PricedProduct | null> {
     const manual = found.onSale && Number(found.salePrice) > 0 && Number(found.salePrice) < base
       ? { type: 'manual', percent: Math.round((1 - Number(found.salePrice) / base) * 100) as number }
       : null;
-    if (manual) {
-      return { ...found, originalPrice: base, price: Number(found.salePrice), sale: manual } as PricedProduct;
-    }
-    // No global/category/flash discounts; use base price
+    if (manual) return { ...found, originalPrice: base, price: Number(found.salePrice), sale: manual } as PricedProduct;
     return { ...found, originalPrice: base, price: base, sale: null } as PricedProduct;
-  }
-  await ensureIndexes();
-  const db = await getDb();
-  const col = db.collection<Product>(COLLECTION);
-  const doc = await col.findOne({ id });
-  if (!doc) return null;
-  const { _id: _mongoId, ...rest } = doc as WithId<Product>;
-  void _mongoId;
-  const seed = readSeedProducts();
-  const seedItem = seed.find((p) => p.id === (rest as Product).id);
-  const merged: Product = {
-    ...(rest as Product),
-    sizes: (Array.isArray((rest as Product).sizes) && (rest as Product).sizes!.length > 0)
-      ? (rest as Product).sizes
-      : (seedItem?.sizes || [])
   };
-  const base = merged.price;
-  const manual = merged.onSale && Number(merged.salePrice) > 0 && Number(merged.salePrice) < base
-    ? { type: 'manual', percent: Math.round((1 - Number(merged.salePrice) / base) * 100) as number }
-    : null;
-  if (manual) {
-    const finalPrice = Number(merged.salePrice);
-    return { ...merged, originalPrice: base, price: finalPrice, sale: manual } as PricedProduct;
+
+  if (shouldUseSeedData()) {
+    return seedFallback();
   }
-  // No global/category/flash discounts; use base price
-  return { ...merged, originalPrice: base, price: base, sale: null } as PricedProduct;
+  try {
+    await ensureIndexes();
+    const db = await getDb();
+    const col = db.collection<Product>(COLLECTION);
+    const doc = await col.findOne({ id });
+    if (!doc) return null;
+    const { _id: _mongoId, ...rest } = doc as WithId<Product>;
+    void _mongoId;
+    const seed = readSeedProducts();
+    const seedItem = seed.find((p) => p.id === (rest as Product).id);
+    const merged: Product = {
+      ...(rest as Product),
+      sizes: (Array.isArray((rest as Product).sizes) && (rest as Product).sizes!.length > 0)
+        ? (rest as Product).sizes
+        : (seedItem?.sizes && seedItem.sizes.length > 0 ? seedItem.sizes : defaultSizesFor(rest as Product))
+    };
+    const base = merged.price;
+    const manual = merged.onSale && Number(merged.salePrice) > 0 && Number(merged.salePrice) < base
+      ? { type: 'manual', percent: Math.round((1 - Number(merged.salePrice) / base) * 100) as number }
+      : null;
+    if (manual) {
+      const finalPrice = Number(merged.salePrice);
+      return { ...merged, originalPrice: base, price: finalPrice, sale: manual } as PricedProduct;
+    }
+    return { ...merged, originalPrice: base, price: base, sale: null } as PricedProduct;
+    } catch (err) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('DB unreachable in getProduct; falling back to seed data:', (err instanceof Error ? err.message : String(err)));
+        return seedFallback();
+      }
+    throw err;
+  }
 }
 export async function upsertProduct(product: Product) {
   await ensureIndexes();
@@ -151,6 +174,7 @@ export async function deleteProduct(id: string) {
   const col = db.collection<Product>(COLLECTION);
   await col.deleteOne({ id });
 }
+
 
 
 

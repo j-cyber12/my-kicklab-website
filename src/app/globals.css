@@ -41,6 +41,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  -webkit-tap-highlight-color: transparent; /* cleaner taps on mobile */
 }
 
 /* Ensure proper sizing and prevent horizontal scroll */
@@ -51,7 +52,13 @@ img, video { max-width: 100%; height: auto; }
 .font-display { font-family: var(--font-display), var(--font-sans); }
 
 /* Design tokens to update colors site‑wide */
-.bg-app { background: linear-gradient(to bottom, var(--bg-start), var(--bg-end)); }
+.bg-app {
+  /* Layered gradients for a soft, modern background */
+  background:
+    radial-gradient(1200px 700px at 85% -15%, color-mix(in srgb, var(--accent-start) 10%, transparent), transparent 55%),
+    radial-gradient(900px 600px at -10% 25%, color-mix(in srgb, var(--accent-end) 12%, transparent), transparent 55%),
+    linear-gradient(to bottom, var(--bg-start), var(--bg-end));
+}
 .surface { background-color: var(--surface); }
 .elevated { background-color: var(--surface-2); }
 .border-token { border-color: color-mix(in srgb, var(--border) 100%, transparent); }
@@ -82,6 +89,203 @@ img, video { max-width: 100%; height: auto; }
   border: 1px solid color-mix(in srgb, var(--border) 100%, transparent);
   border-radius: 1rem; /* ~16px */
   box-shadow: 0 8px 30px rgba(2, 6, 23, 0.06);
+}
+
+/* Subtle glass card, great on overlays or banners */
+.glass {
+  background-color: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 1rem;
+}
+
+/* Colored blur overlay for modals */
+.overlay-tint {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background:
+    radial-gradient(900px 600px at 85% -10%, color-mix(in srgb, var(--accent-end) 32%, transparent), transparent 55%),
+    radial-gradient(900px 600px at -10% 30%, color-mix(in srgb, var(--accent-start) 28%, transparent), transparent 55%),
+    rgba(3, 6, 23, 0.46);
+}
+
+/* Modal entrance animations */
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes modal-in {
+  0%   { opacity: 0; transform: translateY(16px) scale(0.96); }
+  60%  { opacity: 1; transform: translateY(0)   scale(1.005); }
+  100% { opacity: 1; transform: translateY(0)   scale(1); }
+}
+.overlay-in { animation: overlay-in .25s ease-out forwards; }
+.modal-in { animation: modal-in .28s cubic-bezier(.2,.8,.2,1) forwards; }
+
+/* Readable notice/callout block */
+.callout {
+  background-color: color-mix(in srgb, var(--surface) 86%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 95%, transparent);
+  border-radius: .75rem; /* 12px */
+  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.06);
+}
+@keyframes callout-in {
+  0% { opacity: 0; transform: translateY(6px) scale(.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.callout-in { animation: callout-in .28s ease-out forwards; }
+
+/* Accent variant: colorful, modern, no white */
+.callout-accent {
+  color: #fff;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent-start) 85%, transparent), color-mix(in srgb, var(--accent-end) 85%, transparent));
+  border-color: color-mix(in srgb, var(--accent-end) 60%, transparent);
+}
+
+/* Blue-only variant (no purple) for callouts */
+.callout-blue {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(37,99,235,0.92), rgba(37,99,235,0.78)); /* indigo-600 themed */
+  border-color: rgba(37,99,235,0.65);
+  box-shadow: 0 6px 18px rgba(37,99,235,0.25);
+}
+
+/* Soft white glow for important text */
+.glow-text {
+  text-shadow: 0 0 6px rgba(255,255,255,.55), 0 0 14px rgba(124,58,237,.35);
+}
+@keyframes glow-pulse {
+  0%, 100% { text-shadow: 0 0 6px rgba(255,255,255,.5), 0 0 14px rgba(124,58,237,.3); }
+  50%      { text-shadow: 0 0 10px rgba(255,255,255,.8), 0 0 22px rgba(37,99,235,.4); }
+}
+.glow-anim { animation: glow-pulse 2.2s ease-in-out infinite; }
+
+/* Softer static glow (crisper than animated) */
+.soft-glow { text-shadow: 0 1px 8px rgba(255,255,255,.35); }
+
+/* Subtle edge fade for long single-line text */
+.edge-fade {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+/* Animated rotating color ring for modal edges */
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+/* Animate only the hue sweep while the ring stays fixed */
+@property --sweep-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes sweep-hue {
+  to { --sweep-angle: 360deg; }
+}
+
+.glow-frame { position: relative; border-radius: 1rem; }
+.glow-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0; /* aligns with outer edge */
+  padding: 2px; /* ring thickness */
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--sweep-angle),
+    #2563eb 0%,   /* indigo-600 */
+    #06b6d4 25%,  /* cyan-500 */
+    #10b981 50%,  /* emerald-500 */
+    #06b6d4 75%,
+    #2563eb 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: sweep-hue 8s linear infinite;
+  pointer-events: none;
+}
+.glow-inner { position: relative; z-index: 1; border-radius: inherit; }
+
+/* Thin animated color outline for inline pills (sentence strip) */
+.sweep-outline { position: relative; border-radius: 9999px; }
+.sweep-outline::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px; /* thin border */
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--sweep-angle),
+    #2563eb 0%, #06b6d4 25%, #10b981 50%, #06b6d4 75%, #2563eb 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: sweep-hue 8s linear infinite;
+  pointer-events: none;
+}
+.sweep-inner {
+  position: relative;
+  z-index: 1;
+  border-radius: inherit;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  background: linear-gradient(
+    135deg,
+    rgba(2,6,23,0.55),
+    rgba(2,6,23,0.35)
+  );
+}
+
+/* Distinct ticket/ribbon shape (not like rounded cards) */
+.ticket-frame {
+  position: relative;
+  display: block;
+  border-radius: 0;
+  /* Hex-like ticket with angled ends */
+  clip-path: polygon(6% 0, 94% 0, 100% 50%, 94% 100%, 6% 100%, 0 50%);
+}
+.ticket-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 2px; /* border thickness */
+  clip-path: inherit;
+  background: conic-gradient(
+    from var(--sweep-angle),
+    #2563eb 0%, #06b6d4 25%, #10b981 50%, #06b6d4 75%, #2563eb 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: sweep-hue 8s linear infinite;
+  pointer-events: none;
+}
+.ticket-inner {
+  position: relative;
+  z-index: 1;
+  clip-path: inherit;
+  background: linear-gradient(135deg, rgba(2,6,23,0.65), rgba(2,6,23,0.45));
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+/* Slightly tinted glass card for modal body */
+.glass-colored {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface) 82%, transparent) 0%,
+      color-mix(in srgb, var(--accent-start) 8%, transparent) 50%,
+      color-mix(in srgb, var(--accent-end) 10%, transparent) 100%
+    );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  border-radius: 1rem;
 }
 .chip {
   @apply inline-flex items-center justify-center text-sm px-3 py-1.5 rounded-full;
@@ -131,6 +335,18 @@ img, video { max-width: 100%; height: auto; }
 
 .link-underline { background: linear-gradient(currentColor,currentColor) left bottom / 0 2px no-repeat; transition: background-size .25s ease; }
 .link-underline:hover { background-size: 100% 2px; }
+
+/* Gradient text helper (pair with .shimmer for animated gradient) */
+.text-gradient {
+  background-image: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Hide scrollbars on mobile carousels */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
 
 /* Heels Collection */
 .heels-section { margin-top: 1.5rem; padding-left: 1rem; padding-right: 1rem; }
@@ -199,3 +415,34 @@ img, video { max-width: 100%; height: auto; }
 /* Marquee overflow safety to avoid horizontal scroll */
 .marquee { position: relative; overflow: hidden; }
 .marquee__track { white-space: nowrap; }
+
+/* Modern option cards: subtle lift + sweeping shine */
+@keyframes option-shine {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+.option-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.9rem; /* ~14px */
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  box-shadow: 0 6px 18px rgba(2,6,23,0.10);
+  transition: transform .22s ease, box-shadow .22s ease, filter .22s ease;
+}
+.option-card::after {
+  content: "";
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  width: 35%;
+  left: -40%;
+  background: linear-gradient(120deg, transparent 40%, rgba(255,255,255,.22) 50%, transparent 60%);
+  transform: translateX(-100%);
+  animation: option-shine 2.2s linear infinite;
+  pointer-events: none;
+  filter: blur(2px);
+}
+.option-card:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 12px 28px rgba(2,6,23,0.18); }
+.option-card:active { transform: translateY(0) scale(0.985); }
+.option-card .option-icon { transition: transform .22s ease, opacity .22s ease; }
+.option-card:hover .option-icon { transform: translateY(-2px); }

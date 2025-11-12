@@ -51,27 +51,36 @@ export default function SearchBar({ initialQuery = "", initialCategory = "", var
 
   const containerCls = useMemo(() => (
     variant === 'mobile'
-      ? "w-full flex items-stretch rounded-full bg-white text-zinc-900 overflow-hidden shadow"
-      : "w-full max-w-md sm:max-w-2xl relative flex items-stretch rounded-full border border-white/50 dark:border-white/30 bg-transparent text-white overflow-hidden backdrop-blur-sm"
+      ? "w-full flex items-center h-14 rounded-2xl bg-white border border-zinc-200 shadow-[0_20px_60px_rgba(15,23,42,0.12)] overflow-hidden px-2"
+      : "w-full max-w-3xl relative flex items-center h-16 rounded-[34px] bg-white text-zinc-900 border border-zinc-200 shadow-[0_25px_70px_rgba(15,23,42,0.25)] px-3"
   ), [variant]);
 
   const selectCls = useMemo(() => (
     variant === 'mobile'
-      ? "px-3 py-2 bg-white text-zinc-900 border-r border-zinc-200 focus:outline-none"
-      : "w-28 sm:w-36 px-3 py-2 bg-white/90 text-zinc-900 border-r border-white/30 focus:outline-none"
+      ? "px-3 py-2 bg-transparent text-zinc-900 border-r border-zinc-200 focus:outline-none h-full flex items-center text-sm font-semibold"
+      : "w-28 sm:w-36 px-3 py-2 bg-transparent text-zinc-900 border-r border-zinc-200 focus:outline-none h-full flex items-center text-sm font-semibold"
   ), [variant]);
 
   const inputCls = useMemo(() => (
     variant === 'mobile'
-      ? "flex-1 min-w-0 px-4 py-2 bg-white text-zinc-900 placeholder-zinc-500 focus:outline-none"
-      : "flex-1 min-w-0 px-4 py-2 bg-transparent text-white placeholder-white/70 focus:outline-none"
+      ? "flex-1 min-w-0 px-4 py-2 bg-transparent text-zinc-900 placeholder-zinc-500 focus:outline-none h-full flex items-center text-sm"
+      : "flex-1 min-w-0 px-4 py-2 bg-transparent text-zinc-900 placeholder-zinc-400 focus:outline-none h-full flex items-center text-sm"
   ), [variant]);
 
   const buttonCls = useMemo(() => (
     variant === 'mobile'
-      ? "px-4 py-2 bg-zinc-900 text-white font-medium"
-      : "px-4 py-2 bg-transparent text-white font-medium hover:bg-white/10 transition inline-flex items-center justify-center gap-2"
+      ? "px-5 py-2 bg-gradient-to-r from-indigo-600 to-fuchsia-500 text-white font-semibold shadow-lg h-full flex items-center justify-center gap-2 tracking-wide"
+      : "px-5 py-2 border border-zinc-200 bg-zinc-900 text-white font-semibold inline-flex items-center justify-center gap-2 rounded-full shadow-lg transition-transform duration-200 hover:-translate-y-0.5 h-full tracking-wide"
   ), [variant]);
+
+  const SearchIcon = () => (
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-white">
+      <path
+        d="M11 4a7 7 0 1 0 5.657 11.657l4.829 4.828a1 1 0 0 0 1.414-1.415l-4.828-4.828A7 7 0 0 0 11 4zm0 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10z"
+        fill="currentColor"
+      />
+    </svg>
+  );
 
   return (
     <div className={className}>
@@ -118,8 +127,8 @@ export default function SearchBar({ initialQuery = "", initialCategory = "", var
           )}
         </div>
         <button type="button" className={buttonCls} onClick={() => { const params = new URLSearchParams(); if (q) params.set('q', q); if (category) params.set('category', category); window.location.href = '/?' + params.toString() + '#all'; }}>
-          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 opacity-90"><path fill="currentColor" d="M21 21 15.8 15.8M18 10.5A7.5 7.5 0 1 1 3 10.5a7.5 7.5 0 0 1 15 0Z"/></svg>
-          <span className="sr-only sm:not-sr-only sm:ml-1">Search</span>
+          <SearchIcon />
+          <span className="hidden sm:inline">Search</span>
         </button>
       </div>
     </div>

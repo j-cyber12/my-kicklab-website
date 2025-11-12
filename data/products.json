@@ -5,6 +5,7 @@
     "price": 129.99,
     "description": "Lightweight runner with breathable mesh and responsive foam for all‑day comfort.",
     "thumbnail": "/images/air-velocity-1.svg",
+    "category": "slippers",
     "images": [
       "/images/air-velocity-1.svg",
       "/images/air-velocity-2.svg",
@@ -25,6 +26,7 @@
     "price": 149,
     "description": "Sleek lifestyle sneaker with premium knit upper and cushioned midsole.",
     "thumbnail": "/images/street-pulse-1.svg",
+    "category": "heels",
     "images": [
       "/images/street-pulse-1.svg",
       "/images/street-pulse-2.svg",
@@ -45,6 +47,7 @@
     "price": 169.5,
     "description": "Rugged outdoor shoe with grippy outsole and waterproof liner.",
     "thumbnail": "/images/trail-guardian-1.svg",
+    "category": "slippers",
     "images": [
       "/images/trail-guardian-1.svg",
       "/images/trail-guardian-2.svg",
