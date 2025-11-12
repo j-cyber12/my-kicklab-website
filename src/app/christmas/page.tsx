@@ -44,11 +44,6 @@ declare global {
   }
 }
 
-export const metadata = {
-  title: "Christmas Welcome",
-  description: "A festive welcome screen with animated lettering, snow, and ornaments.",
-};
-
 export default function ChristmasWelcomePage() {
   const welcomeRef = useRef<HTMLDivElement>(null);
   const greetingRef = useRef<HTMLDivElement>(null);
