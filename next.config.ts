@@ -1,6 +1,6 @@
 import webpack, { type Compilation, type Compiler } from "webpack";
 import type { Configuration, WebpackPluginInstance } from "webpack";
-import type { NextConfig } from "next";
+import type { NextConfig, RemotePattern } from "next";
 
 type WebpackContext = {
   isServer?: boolean;
@@ -38,10 +38,11 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
       },
-    ],
+    ] satisfies RemotePattern[],
   },
   // Reduce chances of stale file system caches in dev
   webpack: (config: Configuration, ctx: WebpackContext) => {
