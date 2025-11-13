@@ -1,6 +1,7 @@
 import webpack, { type Compilation, type Compiler } from "webpack";
 import type { Configuration, WebpackPluginInstance } from "webpack";
-import type { NextConfig, RemotePattern } from "next";
+import type { NextConfig } from "next";
+import type { RemotePattern } from "next/dist/shared/lib/image-config";
 
 type WebpackContext = {
   isServer?: boolean;
