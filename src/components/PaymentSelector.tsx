@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import styles from "./PaymentSelector.module.css";
 
-const OPTIONS = [
+type PaymentMethod = "visa" | "crypto" | "wish";
+
+const OPTIONS: { key: PaymentMethod; label: string; variant: string }[] = [
   { key: "visa", label: "Visa/Debit Cards", variant: styles.visa },
   { key: "crypto", label: "Cryptocurrency", variant: styles.crypto },
   { key: "wish", label: "Whish Money", variant: styles.wish },
@@ -24,7 +26,7 @@ type CryptoInstructions = {
 };
 
 export default function PaymentSelector({ amount, currency = "usd" }: Props) {
-  const [selected, setSelected] = useState<string>("visa");
+  const [selected, setSelected] = useState<PaymentMethod>("visa");
   const [status, setStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [cryptoInstructions, setCryptoInstructions] = useState<CryptoInstructions | null>(null);
@@ -173,7 +175,7 @@ export default function PaymentSelector({ amount, currency = "usd" }: Props) {
   );
 }
 
-function renderIcon(kind: "visa" | "crypto" | "wish") {
+function renderIcon(kind: PaymentMethod) {
   const base = { width: 40, height: 40 };
   if (kind === "visa") {
     return (
