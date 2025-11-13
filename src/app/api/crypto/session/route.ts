@@ -32,7 +32,12 @@ export async function POST(req: Request) {
     }
 
     const client = getBinance();
-    const deposit = await client.depositAddress({ coin: asset, network });
+    type BinanceDepositAddress = Awaited<ReturnType<typeof client.depositAddress>> & Partial<{
+      addressTag: string;
+      memo: string;
+      network: string;
+    }>;
+    const deposit = (await client.depositAddress({ coin: asset, network })) as BinanceDepositAddress;
     const resolvedAddress = deposit?.address;
     const resolvedTag = deposit?.addressTag || deposit?.memo || tagOrMemo;
     const resolvedNetwork = deposit?.network || network;
