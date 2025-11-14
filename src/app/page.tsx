@@ -6,6 +6,7 @@ import SaleProductsCarousel from '@/components/SaleProductsCarousel';
 import SearchBar from '@/components/SearchBar';
 import HeelsProductsCarousel from '@/components/HeelsProductsCarousel';
 import HeroBackground from '@/components/HeroBackground';
+import WhatsAppSupportButton from '@/components/WhatsAppSupportButton';
 import styles from './page.module.css';
 
 export const runtime = 'nodejs';
@@ -53,11 +54,6 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
         </div>
       </section>
 
-      {/* Mobile search (only on phones) */}
-      <section className="px-4 sm:hidden mt-4">
-        <SearchBar initialQuery={q} initialCategory={categoryFilter || ''} variant="mobile" />
-      </section>
-
       {/* Active sale banner */}
       {/* (() => {
         const now = Date.now();
@@ -98,11 +94,15 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
         <section className="px-4 mt-6">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-semibold">Slippers</h2>
-            <Link href="/?category=slippers#all" className="text-sm text-blue-600 hover:underline">View all</Link>
           </div>
           <SaleProductsCarousel
             items={slippers.map((p) => ({ id: p.id, name: p.name, imageUrl: (p.thumbnail || p.images?.[0] || '/placeholder.svg') as string }))}
           />
+          <div className="text-center mt-4">
+            <Link href="/?category=slippers#all" className="view-all-heels">
+              View all slippers
+            </Link>
+          </div>
         </section>
       )}
 
@@ -162,6 +162,7 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
           <CartButton variant="inline" />
         </div>
       </nav>
+      <WhatsAppSupportButton />
     </div>
   );
 }

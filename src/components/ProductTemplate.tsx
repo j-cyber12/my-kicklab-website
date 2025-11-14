@@ -15,6 +15,15 @@ type Review = {
   timestamp: string;
 };
 
+type CartItem = {
+  id: string;
+  name: string;
+  price: number;
+  qty: number;
+  imageUrl?: string;
+  size?: string | null;
+};
+
 type Props = {
   product: PricedProduct;
 };
@@ -149,6 +158,38 @@ export default function ProductTemplate({ product }: Props) {
 
   const handleCloseCard = useCallback(() => setCardOpen(false), []);
 
+  const handleAddToCart = useCallback(() => {
+    if (!product || product.price <= 0) {
+      setToast("This product cannot be added to the cart.");
+      return;
+    }
+    const payload: CartItem = {
+      id: product.id,
+      name: nameWithSize,
+      price: product.price,
+      qty: 1,
+      imageUrl: product.thumbnail,
+      size: selectedSize,
+    };
+
+    try {
+      const raw = window.localStorage.getItem("cart");
+      const list: CartItem[] = raw ? JSON.parse(raw) : [];
+      const next = [...list];
+      const existing = next.find((it) => it.id === payload.id && it.size === payload.size);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        next.push(payload);
+      }
+      window.localStorage.setItem("cart", JSON.stringify(next));
+      window.dispatchEvent(new CustomEvent("cart:updated"));
+      setToast("Added to cart.");
+    } catch {
+      setToast("Unable to add to cart right now.");
+    }
+  }, [nameWithSize, product.id, product.price, product.thumbnail, selectedSize]);
+
   const handleBuy = useCallback(() => {
     try {
       const payload = {
@@ -264,7 +305,11 @@ export default function ProductTemplate({ product }: Props) {
             >
               Buy now
             </button>
-            <button className={`${styles.btn} ${styles.btnAccent} ${selectedSize ? styles.btnPurple : ""}`} type="button">
+            <button
+              className={`${styles.btn} ${styles.btnAccent} ${selectedSize ? styles.btnPurple : ""}`}
+              type="button"
+              onClick={handleAddToCart}
+            >
               Add to cart
             </button>
           </div>
@@ -318,7 +363,14 @@ export default function ProductTemplate({ product }: Props) {
               </div>
             </div>
             <div className={styles.buyTabSelector}>
-              <PaymentSelector amount={product.price} />
+              <PaymentSelector
+                amount={product.price}
+                product={{
+                  name: nameWithSize,
+                  price: product.price,
+                  imageUrl: (product.thumbnail || product.images?.[0]) as string | undefined,
+                }}
+              />
             </div>
             <button className={styles.buyTabClose} type="button" aria-label="Close" onClick={handleCloseCard}>
               ×
