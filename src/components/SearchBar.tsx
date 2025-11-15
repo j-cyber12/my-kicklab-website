@@ -67,11 +67,12 @@ export default function SearchBar({ initialQuery = "", initialCategory = "", var
       : "flex-1 min-w-0 px-4 py-2 bg-transparent text-zinc-900 placeholder-zinc-400 focus:outline-none h-full flex items-center text-sm"
   ), [variant]);
 
-  const buttonCls = useMemo(() => (
-    variant === 'mobile'
-      ? "px-5 py-2 bg-gradient-to-r from-indigo-600 to-fuchsia-500 text-white font-semibold shadow-lg h-full flex items-center justify-center gap-2 tracking-wide"
-      : "px-5 py-2 border border-zinc-200 bg-zinc-900 text-white font-semibold inline-flex items-center justify-center gap-2 rounded-full shadow-lg transition-transform duration-200 hover:-translate-y-0.5 h-full tracking-wide"
-  ), [variant]);
+  const buttonCls = useMemo(() => {
+    const base = "flex items-center justify-center rounded-full w-12 h-12 shadow-xl transition-transform duration-200";
+    return variant === 'mobile'
+      ? `${base} bg-gradient-to-r from-indigo-600 to-fuchsia-500`
+      : `${base} bg-zinc-900 border border-zinc-800`;
+  }, [variant]);
 
   const SearchIcon = () => (
     <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-white">
@@ -128,7 +129,6 @@ export default function SearchBar({ initialQuery = "", initialCategory = "", var
         </div>
         <button type="button" className={buttonCls} onClick={() => { const params = new URLSearchParams(); if (q) params.set('q', q); if (category) params.set('category', category); window.location.href = '/?' + params.toString() + '#all'; }}>
           <SearchIcon />
-          <span className="hidden sm:inline">Search</span>
         </button>
       </div>
     </div>

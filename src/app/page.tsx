@@ -47,7 +47,12 @@ export default async function Home({ searchParams }: { searchParams?: Promise<Re
             <div className={styles.heroBody}>
               <h1 className={`${styles.heroTitle} font-black`}>Luvré</h1>
               <div className={styles.heroSearch}>
-                <SearchBar initialQuery={q} initialCategory={categoryFilter || ''} variant="desktop" />
+                <div className="hidden sm:block">
+                  <SearchBar initialQuery={q} initialCategory={categoryFilter || ''} variant="desktop" />
+                </div>
+                <div className="sm:hidden">
+                  <SearchBar initialQuery={q} initialCategory={categoryFilter || ''} variant="mobile" />
+                </div>
               </div>
             </div>
           </div>

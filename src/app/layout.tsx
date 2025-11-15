@@ -129,24 +129,22 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${montserrat.variable} antialiased bg-app text-zinc-900 dark:text-zinc-100`}>
         <main>{children}</main>
         <footer className="border-t border-token mt-16 bg-white dark:bg-zinc-900">
-          <div className="max-w-6xl mx-auto px-4 py-10 text-sm text-muted flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <span>&copy; {new Date().getFullYear()} LuvrAc</span>
-              <div className="flex items-center gap-3">
-                {socialLinks.map((link) => (
-                  <a
-                    key={link.name}
-                    href={link.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={link.name}
-                    className={`social-btn ${link.className}`}
-                  >
-                    {link.icon}
-                    <span className="sr-only">{link.name}</span>
-                  </a>
-                ))}
-              </div>
-            <span className="opacity-70">Built with Next.js</span>
+          <div className="max-w-6xl mx-auto px-4 py-10 flex justify-center">
+            <div className="flex flex-wrap gap-4 justify-center">
+              {socialLinks.map((link) => (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={link.name}
+                  className={`social-btn ${link.className}`}
+                >
+                  {link.icon}
+                  <span className="sr-only">{link.name}</span>
+                </a>
+              ))}
+            </div>
           </div>
         </footer>
       </body>
