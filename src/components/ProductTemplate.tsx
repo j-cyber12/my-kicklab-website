@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PricedProduct } from "@/lib/products";
 import { cld } from "@/lib/images";
 import styles from "@/app/product/[id]/page.module.css";
-import PaymentSelector from "@/components/PaymentSelector";
 import ProductImage from "@/components/ProductImage";
 
 type Review = {
@@ -46,7 +45,6 @@ export default function ProductTemplate({ product }: Props) {
   const [rating, setRating] = useState(0);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [toast, setToast] = useState<string | null>(null);
-  const [cardOpen, setCardOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   useEffect(() => {
     const stored = localStorage.getItem("productReviews");
@@ -93,14 +91,9 @@ export default function ProductTemplate({ product }: Props) {
     setActiveIndex(0);
   }, [images]);
 
-  useEffect(() => {
-    if (availableSizes.length > 0 && !selectedSize) {
-      setSelectedSize(availableSizes[0]);
-    }
-  }, [availableSizes, selectedSize]);
-
   const nameWithSize = selectedSize ? `${product.name} (${selectedSize})` : product.name;
   const totalImages = images.length;
+  const productImage = product.thumbnail || product.images?.[0];
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const manualScrollRef = useRef(false);
@@ -156,8 +149,6 @@ export default function ProductTemplate({ product }: Props) {
     if (manualTimeoutRef.current) clearTimeout(manualTimeoutRef.current);
   }, []);
 
-  const handleCloseCard = useCallback(() => setCardOpen(false), []);
-
   const handleAddToCart = useCallback(() => {
     if (!product || product.price <= 0) {
       setToast("This product cannot be added to the cart.");
@@ -190,19 +181,68 @@ export default function ProductTemplate({ product }: Props) {
     }
   }, [nameWithSize, product.id, product.price, product.thumbnail, selectedSize]);
 
+  const whatsappPhoneRaw = process.env.NEXT_PUBLIC_WHATSAPP_PHONE;
+  const whatsappPhone = whatsappPhoneRaw ? whatsappPhoneRaw.replace(/\D/g, "") : null;
+  const customWhatsAppLink = (process.env.NEXT_PUBLIC_WHATSAPP_LINK || "").trim();
+  const baseWhatsAppLink =
+    whatsappPhone ? `https://wa.me/${whatsappPhone}` : customWhatsAppLink || "https://wa.me/message/ZC23PRNRWILSN1";
+
+  const formatWhatsAppLinks = useCallback(() => {
+    const imageSource = images[activeIndex] || productImage;
+    const imageLine = imageSource ? cld(imageSource, "detail") : null;
+    const separator = baseWhatsAppLink.includes("?") ? "&" : "?";
+    const productName = selectedSize ? `${product.name} (${selectedSize})` : product.name;
+    const invoiceLines = [
+      "🧾 Order details",
+      `Product: ${productName}`,
+      `Price: $${product.price.toFixed(2)}`,
+      selectedSize ? `Size: ${selectedSize}` : null,
+      imageLine ? `Image: ${imageLine}` : null,
+      "Quantity: 1",
+      "Please send payment instructions at your convenience.",
+    ].filter((line): line is string => Boolean(line));
+    const message = ["Hi there!", "I'd like to place an order with you:", "", ...invoiceLines].join("\n");
+    const encoded = encodeURIComponent(message);
+    const desktopUrl = `${baseWhatsAppLink}${separator}text=${encoded}`;
+    const mobileUrl = whatsappPhone
+      ? `whatsapp://send?phone=${whatsappPhone}&text=${encoded}`
+      : desktopUrl;
+    return { desktopUrl, mobileUrl };
+  }, [
+    activeIndex,
+    baseWhatsAppLink,
+    images,
+    product.name,
+    product.price,
+    productImage,
+    selectedSize,
+    whatsappPhone,
+  ]);
+
+  const sendWhatsApp = useCallback(() => {
+    const { desktopUrl, mobileUrl } = formatWhatsAppLinks();
+    if (!desktopUrl) {
+      setToast("WhatsApp checkout is not configured yet.");
+      return;
+    }
+    const nav = navigator as Navigator & { userAgentData?: { mobile?: boolean } };
+    const isMobile =
+      nav?.userAgentData?.mobile === true ||
+      /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(nav?.userAgent || "");
+    if (isMobile && mobileUrl) {
+      window.location.href = mobileUrl;
+      return;
+    }
+    window.open(desktopUrl, "_blank");
+  }, [formatWhatsAppLinks]);
+
   const handleBuy = useCallback(() => {
-    try {
-      const payload = {
-        id: product.id,
-        name: nameWithSize,
-        price: product.price,
-        qty: 1,
-        imageUrl: product.thumbnail,
-      };
-      window.localStorage.setItem("checkoutPrefill", JSON.stringify(payload));
-    } catch {}
-    setCardOpen(true);
-  }, [nameWithSize, product.id, product.price, product.thumbnail]);
+    if (availableSizes.length > 0 && !selectedSize) {
+      setToast("Please select a size before checking out via WhatsApp.");
+      return;
+    }
+    sendWhatsApp();
+  }, [availableSizes.length, selectedSize, sendWhatsApp]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -230,88 +270,93 @@ export default function ProductTemplate({ product }: Props) {
 
   return (
     <div className={styles.pageContainer}>
-        <div className={styles.productSection}>
-        <div className={styles.imageGallery}>
-          <div className={styles.imageCard}>
-            <div className={styles.mainImage}>
-              <div className={styles.imageFrame}>
-                <div className={styles.imageScroller} ref={scrollerRef}>
-                  {images.map((src, idx) => (
-                    <div key={`${src}-${idx}`} className={styles.imageSlide}>
-                      <ProductImage src={cld(src, "detail")} alt={product.name} />
+      <div className={styles.productSection}>
+        <div className={styles.productCard}>
+          <div className={styles.imageGallery}>
+            <div className={styles.imageCard}>
+              <div className={styles.mainImage}>
+                <div className={styles.imageFrame}>
+                  <div className={styles.imageScroller} ref={scrollerRef}>
+                    {images.map((src, idx) => (
+                      <div key={`${src}-${idx}`} className={styles.imageSlide}>
+                        <ProductImage src={cld(src, "detail")} alt={product.name} />
+                      </div>
+                    ))}
+                  </div>
+                  {totalImages > 1 && (
+                    <div className={styles.dotRow}>
+                      {images.map((_, idx) => (
+                        <button
+                          key={`dot-${idx}`}
+                          className={`${styles.dot} ${activeIndex === idx ? styles.dotActive : ""}`}
+                          type="button"
+                          onClick={() => {
+                            skipScrollRef.current = false;
+                            setActiveIndex(idx);
+                          }}
+                          aria-label={`View image ${idx + 1}`}
+                        />
+                      ))}
                     </div>
-                  ))}
-                </div>
-                {totalImages > 1 && (
-                  <div className={styles.dotRow}>
+                  )}
+                  <div className={styles.imageDots} aria-hidden="true">
                     {images.map((_, idx) => (
-                      <button
-                        key={`dot-${idx}`}
-                        className={`${styles.dot} ${activeIndex === idx ? styles.dotActive : ""}`}
-                        type="button"
-                        onClick={() => {
-                          skipScrollRef.current = false;
-                          setActiveIndex(idx);
-                        }}
-                        aria-label={`View image ${idx + 1}`}
+                      <span
+                        key={`badge-${idx}`}
+                        className={idx === activeIndex ? styles.imageDotActive : styles.imageDot}
                       />
                     ))}
                   </div>
-                )}
-                <div className={styles.imageDots} aria-hidden="true">
-                  {images.map((_, idx) => (
-                    <span
-                      key={`badge-${idx}`}
-                      className={idx === activeIndex ? styles.imageDotActive : styles.imageDot}
-                    />
-                  ))}
                 </div>
               </div>
             </div>
           </div>
-        </div>
           <div className={styles.productInfo}>
             <div className={styles.productHeader}>
               <h1 className={styles.productName}>${product.price.toFixed(2)}</h1>
               <h2 className={styles.productTitle}>{product.name}</h2>
             </div>
+            <p className={styles.productDescription}>{product.description}</p>
             {availableSizes.length > 0 && (
-            <div className={styles.sizePanel}>
-              <div className={styles.sizePanelHeading}>
-                <span className={styles.availableLabel}>Pick Your Size</span>
-                {selectedSize && <span className={styles.sizeSelectedNote}>Selected: {selectedSize}</span>}
+              <div className={styles.sizePanel}>
+                <div className={styles.sizePanelHeading}>
+                  <span className={styles.availableLabel}>Available Sizes</span>
+                  {selectedSize && (
+                    <span className={styles.sizeSelectedNote}>Selected: {selectedSize}</span>
+                  )}
+                </div>
+                <div className={styles.sizeGrid}>
+                  {availableSizes.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      className={`${styles.sizeChip} ${
+                        selectedSize === size ? styles.sizeChipActive : ""
+                      }`}
+                      onClick={() => setSelectedSize(size)}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className={styles.sizeGrid}>
-                {availableSizes.map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    className={`${styles.sizeChip} ${selectedSize === size ? styles.sizeChipActive : ""}`}
-                    onClick={() => setSelectedSize(size)}
-                    aria-pressed={selectedSize === size}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
+            )}
+            <div className={styles.actionButtons}>
+              <button
+                className={`${styles.btn} ${styles.btnPrimary} ${selectedSize ? styles.btnPurple : ""}`}
+                type="button"
+                onClick={handleBuy}
+              >
+                Checkout via WhatsApp
+              </button>
+              <button
+                className={`${styles.btn} ${styles.btnAccent} ${selectedSize ? styles.btnPurple : ""}`}
+                type="button"
+                onClick={handleAddToCart}
+              >
+                Add to cart
+              </button>
             </div>
-          )}
-          <p className={styles.productDescription}>{product.description}</p>
-          <div className={styles.actionButtons}>
-            <button
-              className={`${styles.btn} ${styles.btnPrimary} ${selectedSize ? styles.btnPurple : ""}`}
-              type="button"
-              onClick={handleBuy}
-            >
-              Buy now
-            </button>
-            <button
-              className={`${styles.btn} ${styles.btnAccent} ${selectedSize ? styles.btnPurple : ""}`}
-              type="button"
-              onClick={handleAddToCart}
-            >
-              Add to cart
-            </button>
           </div>
         </div>
       </div>
@@ -354,30 +399,6 @@ export default function ProductTemplate({ product }: Props) {
         </div>
       </div>
       {toast && <div className={`${styles.toast} ${styles.toastShow}`}>{toast}</div>}
-      {cardOpen && (
-        <div className={styles.cardOverlay} role="dialog" aria-modal="true">
-          <div className={styles.buyTabCard}>
-            <div className={styles.buyTabHeader}>
-              <div>
-                <h3 className={styles.buyTabTitle}>Complete Your Order</h3>
-              </div>
-            </div>
-            <div className={styles.buyTabSelector}>
-              <PaymentSelector
-                amount={product.price}
-                product={{
-                  name: nameWithSize,
-                  price: product.price,
-                  imageUrl: (product.thumbnail || product.images?.[0]) as string | undefined,
-                }}
-              />
-            </div>
-            <button className={styles.buyTabClose} type="button" aria-label="Close" onClick={handleCloseCard}>
-              ×
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
