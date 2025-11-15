@@ -1,15 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import PaymentSelector from "@/components/PaymentSelector";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-type Item = { id: string; name: string; price: number; qty: number; imageUrl?: string };
+type Item = { id: string; name: string; price: number; qty: number; imageUrl?: string; size?: string | null };
 
 export default function CartPage() {
   const [items, setItems] = useState<Item[]>([]);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-
   useEffect(() => {
     const key = "cart";
     const read = () => {
@@ -28,15 +25,6 @@ export default function CartPage() {
   }, []);
 
   const total = useMemo(() => items.reduce((sum, i) => sum + i.price * i.qty, 0), [items]);
-
-  const cartProduct = useMemo(() => {
-    const label = items.length === 1 ? items[0].name : `${items.length} items in cart`;
-    return {
-      name: label || "Cart summary",
-      price: total,
-      imageUrl: items[0]?.imageUrl,
-    };
-  }, [items, total]);
 
   const updateQty = (id: string, delta: number) => {
     setItems((prev) => {
@@ -59,11 +47,53 @@ export default function CartPage() {
     } catch {}
   };
 
-  const openCheckout = () => {
-    if (total <= 0) return;
-    setCheckoutOpen(true);
-  };
-  const closeCheckout = () => setCheckoutOpen(false);
+  const whatsappPhoneRaw = process.env.NEXT_PUBLIC_WHATSAPP_PHONE;
+  const whatsappPhone = whatsappPhoneRaw ? whatsappPhoneRaw.replace(/\D/g, "") : null;
+  const customWhatsAppLink = (process.env.NEXT_PUBLIC_WHATSAPP_LINK || "").trim();
+  const baseWhatsAppLink =
+    whatsappPhone ? `https://wa.me/${whatsappPhone}` : customWhatsAppLink || "https://wa.me/message/ZC23PRNRWILSN1";
+
+  const cartMessage = useMemo(() => {
+    if (items.length === 0) return "";
+    const lines: string[] = ["Hello! I'd like to place an order:", ""];
+    items.forEach((item, index) => {
+      lines.push(`Product ${index + 1}:`);
+      lines.push(`- Name: ${item.name}`);
+      if (item.size) {
+        lines.push(`- Size: ${item.size}`);
+      }
+      lines.push(`- Price: $${item.price.toFixed(2)}`);
+      if (item.imageUrl) {
+        lines.push(`- Image: ${item.imageUrl}`);
+      }
+      lines.push("");
+    });
+    lines.push(`Total: $${total.toFixed(2)}`);
+    return lines.join("\n");
+  }, [items, total]);
+
+  const onWhatsAppCheckout = useCallback(() => {
+    if (!cartMessage) return;
+    const encoded = encodeURIComponent(cartMessage);
+    const separator = baseWhatsAppLink.includes("?") ? "&" : "?";
+    const desktopUrl = `${baseWhatsAppLink}${separator}text=${encoded}`;
+    const mobileUrl = whatsappPhone
+      ? `whatsapp://send?phone=${whatsappPhone}&text=${encoded}`
+      : desktopUrl;
+    const nav = navigator as Navigator & { userAgentData?: { mobile?: boolean } };
+    const isMobile =
+      nav?.userAgentData?.mobile === true ||
+      /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(nav?.userAgent || "");
+    try {
+      if (isMobile && mobileUrl) {
+        window.location.href = mobileUrl;
+      } else {
+        window.open(desktopUrl, "_blank", "noreferrer");
+      }
+    } catch {
+      window.location.href = desktopUrl;
+    }
+  }, [baseWhatsAppLink, cartMessage, whatsappPhone]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
@@ -119,44 +149,21 @@ export default function CartPage() {
             <button className="text-sm text-zinc-600 hover:underline" onClick={clear}>
               Clear cart
             </button>
-            <div className="flex flex-wrap items-center gap-3 ml-auto">
-              <div className="text-lg font-semibold">Total: ${total.toFixed(2)}</div>
-              <button
-                type="button"
-                className="btn btn-primary font-medium disabled:opacity-50"
-                onClick={openCheckout}
-                disabled={total <= 0}
-              >
-                Proceed to checkout
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {checkoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl dark:bg-zinc-900">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-500">Checkout</p>
-                <h2 className="text-2xl font-bold">Select how you want to pay</h2>
+              <div className="flex flex-wrap items-center gap-3 ml-auto">
+                <div className="text-lg font-semibold">Total: ${total.toFixed(2)}</div>
+                <button
+                  type="button"
+                  className="btn btn-primary font-medium disabled:opacity-50"
+                  onClick={onWhatsAppCheckout}
+                  disabled={!cartMessage}
+                >
+                  Proceed to checkout
+                </button>
               </div>
-              <button
-                type="button"
-                aria-label="Close checkout"
-                onClick={closeCheckout}
-                className="text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-              >
-                ×
-              </button>
-            </div>
-            <div className="mt-4">
-              <PaymentSelector amount={total} product={cartProduct} />
             </div>
           </div>
-        </div>
-      )}
+        )}
+
     </div>
   );
 }
